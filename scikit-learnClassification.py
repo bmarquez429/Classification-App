@@ -1,7 +1,7 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: February 23, 2024
+Date Modified: February 27, 2024
 ----------------------------------------------------------------------------------------
 Take the user through the steps to train and test classification models in scikit-learn.
 ----------------------------------------------------------------------------------------
@@ -9,10 +9,13 @@ Take the user through the steps to train and test classification models in sciki
 
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import RocCurveDisplay
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 import matplotlib.pyplot as plt
 import modelParams
 import pandas as pd
@@ -28,9 +31,12 @@ def setStage(i):
 def setAllOptions():
     "Change the value of the allOptions key."
     
-    condition = st.session_state[option1] and \
-                st.session_state[option2] and \
-                st.session_state[option3]
+    condition = st.session_state[model1] and \
+                st.session_state[model2] and \
+                st.session_state[model3] and \
+                st.session_state[model4] and \
+                st.session_state[model5] and \
+                st.session_state[model6]     
 
     if condition:
        st.session_state.allOptions = True
@@ -42,19 +48,25 @@ def setAllOptions():
     return
 
 def setOptions():
-    "Change the values of the option1 and option2 keys."
+    "Change the values of the model keys."
 
     if st.session_state.allOptions:
         
-       st.session_state[option1] = True
-       st.session_state[option2] = True
-       st.session_state[option3] = True
+       st.session_state[model1] = True
+       st.session_state[model2] = True
+       st.session_state[model3] = True
+       st.session_state[model4] = True
+       st.session_state[model5] = True
+       st.session_state[model6] = True
        
     else:
          
-       st.session_state[option1] = False
-       st.session_state[option2] = False
-       st.session_state[option3] = False
+       st.session_state[model1] = False
+       st.session_state[model2] = False
+       st.session_state[model3] = False
+       st.session_state[model4] = False
+       st.session_state[model5] = False
+       st.session_state[model6] = False
        
     setStage(4)
         
@@ -169,13 +181,19 @@ if st.session_state.stage >= 4:
    st.write(" ")
    st.write("Select the model to train.")
    
-   option1 = "Logistic Regression"
-   option2 = "k-Nearest Neighbors Classifier"
-   option3 = "Random Forest Classifier"
+   model1 = "Decision Tree Classifier"
+   model2 = "Gaussian Process Classifier"
+   model3 = "k-Nearest Neighbors Classifier"
+   model4 = "Logistic Regression"
+   model5 = "Random Forest Classifier"
+   model6 = "Support Vector Classifier"
    
-   st.checkbox(label = option1, key = option1, on_change = setAllOptions)
-   st.checkbox(label = option2, key = option2, on_change = setAllOptions)
-   st.checkbox(label = option3, key = option3, on_change = setAllOptions)
+   st.checkbox(label = model1, key = model1, on_change = setAllOptions)
+   st.checkbox(label = model2, key = model2, on_change = setAllOptions)
+   st.checkbox(label = model3, key = model3, on_change = setAllOptions)
+   st.checkbox(label = model4, key = model4, on_change = setAllOptions)
+   st.checkbox(label = model5, key = model5, on_change = setAllOptions)
+   st.checkbox(label = model6, key = model6, on_change = setAllOptions)
    st.checkbox("Select all models", key = 'allOptions', on_change = setOptions)
    
    st.write("Click the button below to complete the selection of models.")
@@ -187,7 +205,7 @@ if st.session_state.stage >= 4:
     
 if st.session_state.stage >= 5:
     
-    options = [option1, option2, option3]
+    options = [model1, model2, model3, model4, model5, model6]
     trueOptions = []
     
     for option in options:
@@ -196,15 +214,26 @@ if st.session_state.stage >= 5:
             trueOptions.append(option)
             
     n = len(trueOptions)
+    
+    st.write(" ")
             
     if n == 1:
-       st.write("You selected " + trueOptions[0].lower() + ". Click the button \
+       st.write("You selected " + trueOptions[0] + ". Click the button \
                  below to set the values of the model parameters.")
     elif n == 2:
-         st.write("You selected " + trueOptions[0].lower() + " and " + trueOptions[1].lower() + ". \
+         st.write("You selected " + trueOptions[0] + " and " + trueOptions[1] + ". \
                    Click the button below to set the values of the model parameters.") 
-    else:
-         st.write("You selected all the models. Click the button below to set the values \
+    elif n >= 3 and n != len(options):
+        
+         st.write("You selected the following models:")
+         
+         for i in range(n):
+             st.write("(" + str(i + 1) + ") " + trueOptions[i])
+             
+         st.write("Click the button below to set the values of the model parameters.")
+         
+    elif n == len(options):
+         st.write("You selected all the available models. Click the button below to set the values \
                    of the model parameters.")
              
     st.button(label = "Set model parameters", on_click = setStage, args = [6])
@@ -215,27 +244,37 @@ if st.session_state.stage >= 5:
     
 if st.session_state.stage >= 6:
     
+   st.write("")
+    
    paramsValues = {}
     
    if n == 1:
       paramsValues[trueOptions[0]] = modelParams.setModelParams(trueOptions[0])
    else:
+      
+      if n >= 5:
+         st.write("To scroll through the tabs, click on a tab and use the left-arrow and right-arrow keys.")
        
-        tabs = st.tabs([trueOptions[i] for i in range(n)])
+      tabs = st.tabs([trueOptions[i] for i in range(n)])
+    
+      for i in range(n):
+    
+          with tabs[i]:
         
-        for i in range(n):
+               paramsValues_i = modelParams.setModelParams(trueOptions[i])
         
-            with tabs[i]:
-            
-                 paramsValues_i = modelParams.setModelParams(trueOptions[i])
-            
-            paramsValues[trueOptions[i]] = paramsValues_i
+          paramsValues[trueOptions[i]] = paramsValues_i
        
    st.write("Click the `Reset model parameters` button to set the model parameters \
              again or click the `Confirm` button to confirm the \
              assigned values of the model parameters.")
-   st.button(label = "Reset model parameters", on_click = setStage, args = [5])          
-   st.button(label = "Confirm model parameters", on_click = setStage, args = [7])
+   cols = st.columns(3)
+   
+   with cols[0]:
+        st.button(label = "Reset model parameters", on_click = setStage, args = [5])   
+        
+   with cols[1]:
+        st.button(label = "Confirm model parameters", on_click = setStage, args = [7])
 
 #-------------
 # Train model.
@@ -247,23 +286,34 @@ if st.session_state.stage >= 7:
       st.session_state.models = {}
       
    if n == 1:
-      modelString = "model"
+       
+      stringPart1 = "model"
+      stringPart2 = "curve"
+      
    else:
-      modelString = "models"
+       
+      stringPart1 = "models"
+      stringPart2 = "curves"
       
    st.write(" ") 
-   st.write("Click the button below to train the selected " + modelString + ".")
+   st.write("Click the button below to train the selected " + stringPart1 + ".")
 
-   if st.button(label = "Train " + modelString, on_click = setStage, args = [8]): 
+   if st.button(label = "Train " + stringPart1, on_click = setStage, args = [8]): 
           
       for option in trueOptions:
           
-          if option == option1:  
-             model = LogisticRegression(random_state = 1, **paramsValues[option])   
-          elif option == option2:
-               model = KNeighborsClassifier(**paramsValues[option])   
-          elif option == option3:
+          if option == model1:
+             model = DecisionTreeClassifier(random_state = 1, **paramsValues[option])
+          elif option == model2:
+               model = GaussianProcessClassifier(random_state = 1, **paramsValues[option])
+          elif option == model3:  
+               model = KNeighborsClassifier(**paramsValues[option])  
+          elif option == model4:
+               model = LogisticRegression(random_state = 1, **paramsValues[option])   
+          elif option == model5:
                model = RandomForestClassifier(random_state = 1, **paramsValues[option])
+          elif option == model6:
+               model = SVC(random_state = 1, **paramsValues[option])
                  
           model.fit(xTrain, yTrain)
           st.session_state.models[option] = model
@@ -295,9 +345,9 @@ if st.session_state.stage >= 8:
 
 if st.session_state.stage >= 9:
    
-   st.write("Click the button below to display the ROC curve of the model on the test set.")
+   st.write("Click the button below to display the ROC " + stringPart2 + " of the " + stringPart1 + " on the test set.")
      
-   if st.button(label = "Display the ROC curve", on_click = setStage, args = [10]):
+   if st.button(label = "Display the ROC " + stringPart2, on_click = setStage, args = [10]):
       
       xTest = colTransformer.transform(testSet[features])
       yTest = testSet["target"].to_numpy()
@@ -331,8 +381,10 @@ if st.session_state.stage >= 9:
             
          if nRows == 1:
             figsize = (10, 5)
-         else:
+         elif nRows == 2:
             figsize = (9, 9)
+         else:
+            figsize = (9, 14)
            
          fig, axes = plt.subplots(nRows, 2, sharey = True, figsize = figsize)
          plt.rc('legend', fontsize = 9)
@@ -360,10 +412,13 @@ if st.session_state.stage >= 9:
          if remainder == 1:
             fig.delaxes(axes[n//2, 1])
          
-         if nRows > 1:
-             
-            fig.tight_layout()
+         fig.tight_layout()  
+         
+         if nRows == 2:
             plt.subplots_adjust(wspace = 0.05, hspace = 0.3)
+         elif nRows > 2:
+              plt.subplots_adjust(wspace = 0.1, hspace = 0.3)
+             
 
       st.pyplot(fig)
 
