@@ -249,7 +249,7 @@ if st.session_state.stage >= 6:
    paramsValues = {}
     
    if n == 1:
-      paramsValues[trueOptions[0]] = modelParams.setModelParams(trueOptions[0])
+      paramsValues[trueOptions[0]], disabled = modelParams.setModelParams(trueOptions[0])
    else:
       
       if n >= 5:
@@ -261,20 +261,28 @@ if st.session_state.stage >= 6:
     
           with tabs[i]:
         
-               paramsValues_i = modelParams.setModelParams(trueOptions[i])
+               paramsValues_i, disabled = modelParams.setModelParams(trueOptions[i])
         
           paramsValues[trueOptions[i]] = paramsValues_i
-       
-   st.write("Click the `Reset model parameters` button to set the model parameters \
-             again or click the `Confirm` button to confirm the \
-             assigned values of the model parameters.")
+     
+   if disabled == 0:     
+      st.write("Click the `Reset model parameters` button to set the model parameters \
+                again or click the `Confirm` button to confirm the \
+                assigned values of the model parameters.")
+   elif disabled == 1:
+        st.markdown("Please correct the input above as indicated by the message in :red[red] to enable the \
+                    `Confirm model parameters` button.")    
+   else:
+        st.markdown("Please correct the inputs above as indicated by the messages in :red[red] to enable the \
+                    `Confirm model parameters` button.") 
+   
    cols = st.columns(3)
    
    with cols[0]:
         st.button(label = "Reset model parameters", on_click = setStage, args = [5])   
         
    with cols[1]:
-        st.button(label = "Confirm model parameters", on_click = setStage, args = [7])
+        st.button(label = "Confirm model parameters", on_click = setStage, args = [7], disabled = disabled)
 
 #-------------
 # Train model.
