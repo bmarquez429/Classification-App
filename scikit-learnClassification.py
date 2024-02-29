@@ -1,16 +1,18 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: February 27, 2024
+Date Modified: February 29, 2024
 ----------------------------------------------------------------------------------------
 Take the user through the steps to train and test classification models in scikit-learn.
 ----------------------------------------------------------------------------------------
 """
 
+from joblib import dump
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 from sklearn.metrics import RocCurveDisplay
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -18,6 +20,8 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 import matplotlib.pyplot as plt
 import modelParams
+import numpy as np
+import os
 import pandas as pd
 import streamlit as st
 
@@ -347,92 +351,210 @@ if st.session_state.stage >= 8:
    else:
       setStage(8)
 
-#-----------------------
-# Display the ROC curve.
-#-----------------------
+#--------------------------------
+# Click to display the ROC curve.
+#--------------------------------
 
 if st.session_state.stage >= 9:
    
    st.write("Click the button below to display the ROC " + stringPart2 + " of the " + stringPart1 + " on the test set.")
      
-   if st.button(label = "Display the ROC " + stringPart2, on_click = setStage, args = [10]):
+   st.button(label = "Display the ROC " + stringPart2, on_click = setStage, args = [10])
       
-      xTest = colTransformer.transform(testSet[features])
-      yTest = testSet["target"].to_numpy()
+   st.write(" ")
+   st.write(" ")
+
+#-----------------------
+# Display the ROC curve.
+#-----------------------
+
+if st.session_state.stage >= 10:
       
-      st.write(" ")
-      st.write(" ")
-      
-      if n == 1:
-      
-         plt.rcParams["axes.linewidth"] = 0.3
-         plt.rc('legend', fontsize = 2.7)
-         model = st.session_state.models[trueOptions[0]]
-         RocCurveDisplay.from_estimator(model, xTest, yTest, lw = 0.3)
-         fig = plt.gcf()
-         fig.set_size_inches(3, 2)
-         ax = plt.gca()
-         ax.set_aspect("equal")
-         ax.xaxis.set_tick_params(length = 1.5, width = 0.3, labelsize = 2.7)
-         ax.yaxis.set_tick_params(length = 1.5, width = 0.3, labelsize = 2.7)
-         ax.xaxis.label.set_size(3.2)
-         ax.yaxis.label.set_size(3.2)
+   xTest = colTransformer.transform(testSet[features])
+   yTest = testSet["target"].to_numpy()
+   
+   m = 0
+    
+   if n == 1:
+    
+      plt.rcParams["axes.linewidth"] = 0.3
+      plt.rc('legend', fontsize = 2.7)
+      model = st.session_state.models[trueOptions[0]]
+      RocCurveDisplay.from_estimator(model, xTest, yTest, lw = 0.3)
+      fig = plt.gcf()
+      fig.set_size_inches(3, 2)
+      ax = plt.gca()
+      ax.set_aspect("equal")
+      ax.xaxis.set_tick_params(length = 1.5, width = 0.3, labelsize = 2.7)
+      ax.yaxis.set_tick_params(length = 1.5, width = 0.3, labelsize = 2.7)
+      ax.xaxis.label.set_size(3.2)
+      ax.yaxis.label.set_size(3.2)
          
-      else:
+   else:
           
-         remainder = n % 2
-           
-         if remainder == 0:
-            nRows = n//2
-         else:
-            nRows = n//2 + 1
-            
-         if nRows == 1:
-            figsize = (10, 5)
-         elif nRows == 2:
-            figsize = (9, 9)
-         else:
-            figsize = (9, 14)
-           
-         fig, axes = plt.subplots(nRows, 2, sharey = True, figsize = figsize)
-         plt.rc('legend', fontsize = 9)
+      remainder = n % 2
+      
+      if remainder == 0:
+         nRows = n//2
+      else:
+         nRows = n//2 + 1
+       
+      if nRows == 1:
+         figsize = (10, 5)
+      elif nRows == 2:
+           figsize = (9, 9)
+      else:
+           figsize = (9, 14)
+      
+      fig, axes = plt.subplots(nRows, 2, sharey = True, figsize = figsize)
+      plt.rc('legend', fontsize = 9)
+      
+      rocAucScores = []
          
-         for i in range(n):
+      for i in range(n):
              
-             if nRows == 1:
-                j = i
-             else:
-                j = (i//2, i % 2)
+          if nRows == 1:
+             j = i
+          else:
+             j = (i//2, i % 2)
             
-             model = st.session_state.models[trueOptions[i]]
-             RocCurveDisplay.from_estimator(model, xTest, yTest, ax = axes[j], lw = 1.2)
-             axes[j].set_aspect("equal")
-             axes[j].set_title(trueOptions[i], fontsize = 12)
-             axes[j].xaxis.set_tick_params(labelsize = 9)
-             axes[j].yaxis.set_tick_params(labelsize = 9)
-             axes[j].xaxis.label.set_size(10)
+          model = st.session_state.models[trueOptions[i]]
+          RocCurveDisplay.from_estimator(model, xTest, yTest, ax = axes[j], lw = 1.2)
+          axes[j].set_aspect("equal")
+          axes[j].set_title(trueOptions[i], fontsize = 12)
+          axes[j].xaxis.set_tick_params(labelsize = 9)
+          axes[j].yaxis.set_tick_params(labelsize = 9)
+          axes[j].xaxis.label.set_size(10)
               
-             if i % 2 == 0:
-                axes[j].yaxis.label.set_size(10)
-             else:
-                axes[j].set_ylabel("")
-                
-         if remainder == 1:
-            fig.delaxes(axes[n//2, 1])
-         
-         fig.tight_layout()  
-         
-         if nRows == 2:
-            plt.subplots_adjust(wspace = 0.05, hspace = 0.3)
-         elif nRows > 2:
-              plt.subplots_adjust(wspace = 0.1, hspace = 0.3)
+          if i % 2 == 0:
+             axes[j].yaxis.label.set_size(10)
+          else:
+             axes[j].set_ylabel("")
              
+          rocAucScore = np.round(roc_auc_score(yTest, model.predict_proba(xTest)[:, 1]), 2)
+          rocAucScores.append(rocAucScore)
+                
+      if remainder == 1:
+         fig.delaxes(axes[n//2, 1])
+   
+      fig.tight_layout()  
+   
+      if nRows == 2:
+         plt.subplots_adjust(wspace = 0.05, hspace = 0.3)
+      elif nRows > 2:
+           plt.subplots_adjust(wspace = 0.1, hspace = 0.3)
+                
+      indicesMaxRocAucScore = np.argwhere(rocAucScores == np.amax(rocAucScores)).flatten().tolist()
+      m = len(indicesMaxRocAucScore)
+             
+   st.pyplot(fig)
+   
+   if n > 1:
+       
+      st.write(" ")
+      st.write(" ")
+         
+      if m == 1 and n == 2:
+         
+         betterModel = trueOptions[indicesMaxRocAucScore[0]]
+         otherModel = list(set(trueOptions).difference({betterModel}))[0]
+         st.write(betterModel + " is better than " + otherModel + " on the basis of their ROC AUC \
+                  scores on the test set.")
+                  
+      elif m == 1 and n >= 3:
+           st.write("The best model among the " + str(n) + " selected trained models on the basis of \
+                     their ROC AUC scores on the test set is " + trueOptions[indicesMaxRocAucScore[0]] + ".")            
+      elif m == 2 and n >= 3:
+           st.write("The best models among the " + str(n) + " selected trained models on the basis of \
+                     their ROC AUC scores on the test set are " + trueOptions[indicesMaxRocAucScore[0]] + \
+                     " and " + trueOptions[indicesMaxRocAucScore[1]] + ".")
+      elif m >= 3 and n >=3 and m != n:
+          
+           st.write("The best models among the " + str(n) + " selected trained models on the basis of \
+                     their ROC AUC scores on the test set are:")
+                   
+           for i in range(m):
+               st.write("(" + str(i + 1) + ") " + trueOptions[indicesMaxRocAucScore[i]])
+                   
+      elif m == n:
+           st.write("The selected trained models have the same ROC AUC score on the test set.")
+       
+   setStage(11)
+      
+#------------
+# Save model.
+#------------
 
-      st.pyplot(fig)
+if st.session_state.stage >= 11:
+   
+   st.write(" ")
+   st.write(" ") 
+   
+   if n == 1 or m == 1:
+       
+      if m == 1 and n == 2:
+         stringPart = " the better "
+      elif m == 1 and n >= 3:
+           stringPart = " the best "
+      else:
+           stringPart = " "
+      
+      st.write("Click the button below to save" + stringPart + "model.")
+    
+      if n == 1:
+         modelName = trueOptions[0]
+      elif m == 1:
+           modelName = trueOptions[indicesMaxRocAucScore[0]]
+           
+      model = st.session_state.models[modelName]
+    
+      modelNameParts = modelName.split() 
+      filename = modelNameParts[0].lower()
+   
+      for i in range(1, len(modelNameParts)):
+          filename += modelNameParts[i]
+   
+      filename += ".joblib"
 
+      if st.button(label = "Save" + stringPart + "model"):
+       
+         dump(model, filename) 
+         st.write("Model saved as a joblib file in " + os.getcwd())
+         
+   else:
+      
+      if m == n:
+         stringPart = " "
+      else:
+         stringPart = " best " 
+       
+      st.write("Click the button below to save the" + stringPart + "models.")
+   
+      if st.button(label = "Save the" + stringPart + "models"):
+       
+         for i in range(m):
+          
+             modelName = trueOptions[indicesMaxRocAucScore[i]]
+          
+             model = st.session_state.models[modelName]
+        
+             modelNameParts = modelName.split() 
+             filename = modelNameParts[0].lower()
+       
+             for j in range(1, len(modelNameParts)):
+                 filename += modelNameParts[j]
+       
+             filename += ".joblib"
+          
+             dump(model, filename) 
+             
+         st.write("Models saved as joblib files in " + os.getcwd())
+         
+   setStage(12)
+          
 #-----------
 # Start over
 #-----------
 
-if st.session_state.stage >= 10:
+if st.session_state.stage >= 12:
    st.sidebar.button(label = 'Start Over', on_click = setStage, args = [0])

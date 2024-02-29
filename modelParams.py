@@ -1001,7 +1001,7 @@ def setRFCParams():
     maxFeatures = st.selectbox(label = "max_features",
                                options = ["int or float", "sqrt", "log2", None],
                                index = 1,
-                               key = "dtc_max_features1",
+                               key = "rfc_max_features1",
                                on_change = setStage,
                                args = [6])
     disabledMaxFeatures = False
@@ -1012,7 +1012,7 @@ def setRFCParams():
                                      value = None,
                                      step = 1.0,
                                      format = "%f",
-                                     key = "dtc_max_features2",
+                                     key = "rfc_max_features2",
                                      on_change = setStage,
                                      args = [6])
        
@@ -1284,17 +1284,7 @@ def setSVCParams():
                              index = 0,
                              on_change = setStage,
                              args = [6])
-    
-    #------------
-    # probability
-    #------------
-
-    probability = st.selectbox(label = "probability",
-                               options = [True, False],
-                               index = 1,
-                               on_change = setStage,
-                               args = [6])
-    
+        
     #----
     # tol
     #----
@@ -1386,7 +1376,7 @@ def setSVCParams():
     params["kernel"] = kernel
     params["gamma"] = gamma
     params["shrinking"] = shrinking
-    params["probability"] = probability
+    params["probability"] = True
     params["tol"] = tol
     params["cache_size"] = cacheSize
     params["class_weight"] = classWeight
