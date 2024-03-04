@@ -1,20 +1,16 @@
 """
          File: modelParams.py
  Date Created: February 22, 2024
-Date Modified: February 29, 2024
+Date Modified: March 4, 2024
 ---------------------------------------------------------
 This script is imported by scikit-learnClassification.py.
 ---------------------------------------------------------
 """
 
+from helperFunctions import setStage
 import math
 import sklearn.gaussian_process.kernels as sgpk
 import streamlit as st
-
-def setStage(i):
-    "Set the session state."
-    
-    st.session_state.stage = i
     
 def setDTCParams():
     "Set the decision tree classifier parameters."
