@@ -1,6 +1,7 @@
 """
-        File: helperFunctions.py
-Date Created: March 4, 2024
+         File: helperFunctions.py
+ Date Created: March 4, 2024
+Date Modified: March 6, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ def setAllOptions():
     else:
        st.session_state.allOptions = False
        
-    setStage(5)
+    setStage(7)
 
 def setOptions():
     "Change the values of the model keys."
@@ -140,9 +141,14 @@ def setOptions():
        st.session_state[model5] = False
        st.session_state[model6] = False
        
-    setStage(5)
+    setStage(7)
     
 def setStage(i):
     "Change the value of the stage key."
     
     st.session_state.stage = i
+    
+    if i == 0 or i == 5:
+       
+       if "trainTestSplit" in st.session_state:
+          del st.session_state["trainTestSplit"]
