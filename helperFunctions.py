@@ -1,12 +1,13 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: March 6, 2024
+Date Modified: March 9, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
 """
 
+from sklearn.preprocessing import Binarizer
 import streamlit as st
 
 model1 = "Decision Tree Classifier"
@@ -16,14 +17,75 @@ model4 = "Logistic Regression"
 model5 = "Random Forest Classifier"
 model6 = "Support Vector Classifier"
 
-def displayData(data, header):
-    "Display data."
+def binarizeTarget(dataset, classes, targetVariable, variableType):
+    '''Binarize a target variable.'''
+    
+    if variableType == "categorical":
+        
+       positiveClasses = st.multiselect(label = "Select the classes that will be map to 1.",
+                                        options = classes,
+                                        on_change = setStage,
+                                        args = [3],
+                                        placeholder = "Select class(es)")
+    
+       nUniqueValues = len(classes)
+  
+       if len(positiveClasses) > 0:
+     
+          if len(positiveClasses) == nUniqueValues:
+         
+             st.markdown(":red[You cannot select all the classes since at least one class should be \
+                          map to 0. Please edit your selection.]")
+             setStage(3)
+        
+          else:
+        
+             st.write("Click the button below to complete the selection of the classes that will be \
+                       map to 1.")         
+               
+             st.button(label = "Complete selection", key = "positiveClassesSelection", on_click = setStage, 
+                       args = [5])
+        
+             dataset["binarized target"] = dataset[targetVariable].apply(lambda x: 1 if x in positiveClasses else 0)
+
+       else:
+          setStage(3)
+          
+    elif variableType == "continuous": 
+        
+         threshold = st.number_input(label = "Input a threshold.",
+                                     value = 0.0,
+                                     step = 1.0,
+                                     format = "%.1f",
+                                     on_change = setStage,
+                                     args = [3])
+        
+         st.write("Click the button below to complete the mapping of values to 1 and 0 according to the selected \
+                   threshold.")         
+           
+         st.button(label = "Complete mapping", key = "positiveClassesMapping", on_click = setStage, 
+                   args = [5])
+         
+        
+         y = dataset[[targetVariable]]
+         binarizer = Binarizer(threshold = threshold)
+         binarizer.fit(y)
+         dataset["binarized target"] = binarizer.transform(y).astype(int)
+         
+         
+         
+    
+def displayData(data, header, displayInstancesCount = True):
+    '''Display data.'''
     
     st.markdown(header)
     st.dataframe(data, height = 215)
     
+    if displayInstancesCount:
+       st.write("Number of Instances = ", data.shape[0])
+    
 def printTrainingResults(trainingSucceeded, trainingFailed, messagePart):
-    "Print a message regarding the result(s) of model training."
+    '''Print a message regarding the result(s) of model training.'''
     
     p = len(trainingSucceeded)
     q = len(trainingFailed)
@@ -104,7 +166,7 @@ def printTrainingResults(trainingSucceeded, trainingFailed, messagePart):
              st.write(messagePart4)
 
 def setAllOptions():
-    "Change the value of the allOptions key."
+    '''Change the value of the allOptions key.'''
     
     condition = st.session_state[model1] and \
                 st.session_state[model2] and \
@@ -118,10 +180,10 @@ def setAllOptions():
     else:
        st.session_state.allOptions = False
        
-    setStage(7)
+    setStage(8)
 
 def setOptions():
-    "Change the values of the model keys."
+    '''Change the values of the model keys.'''
 
     if st.session_state.allOptions:
         
@@ -141,14 +203,14 @@ def setOptions():
        st.session_state[model5] = False
        st.session_state[model6] = False
        
-    setStage(7)
+    setStage(8)
     
 def setStage(i):
-    "Change the value of the stage key."
+    '''Change the value of the stage key.'''
     
     st.session_state.stage = i
     
-    if i == 0 or i == 5:
+    if i == 0 or i == 6:
        
        if "trainTestSplit" in st.session_state:
           del st.session_state["trainTestSplit"]

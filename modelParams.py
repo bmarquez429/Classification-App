@@ -1,7 +1,7 @@
 """
          File: modelParams.py
  Date Created: February 22, 2024
-Date Modified: March 4, 2024
+Date Modified: March 9, 2024
 ---------------------------------------------------------
 This script is imported by scikit-learnClassification.py.
 ---------------------------------------------------------
@@ -13,7 +13,7 @@ import sklearn.gaussian_process.kernels as sgpk
 import streamlit as st
     
 def setDTCParams():
-    "Set the decision tree classifier parameters."
+    '''Set the decision tree classifier parameters.'''
     
     #----------
     # criterion
@@ -24,7 +24,7 @@ def setDTCParams():
                              index = 0,
                              key = "dtc_criterion",
                              on_change = setStage,
-                             args = [6])
+                             args = [10])
     
     #---------
     # splitter
@@ -34,7 +34,7 @@ def setDTCParams():
                             options = ["best", "random"],
                             index = 0,
                             on_change = setStage,
-                            args = [6])
+                            args = [10])
     
     #----------
     # max_depth
@@ -46,7 +46,7 @@ def setDTCParams():
                                format = "%f",
                                key = "dtc_max_depth", 
                                on_change = setStage,
-                               args = [6],
+                               args = [10],
                                placeholder = "None")
     disabledMaxDepth = False
     
@@ -73,7 +73,7 @@ def setDTCParams():
                                       format = "%f",
                                       key = "dtc_min_samples_split", 
                                       on_change = setStage,
-                                      args = [6])
+                                      args = [10])
     disabledMinSamplesSplit = False
     
     minSamplesSplitDelta = minSamplesSplit - math.floor(minSamplesSplit)
@@ -98,7 +98,7 @@ def setDTCParams():
                                       format = "%f",
                                       key = "dtc_min_samples_leaf", 
                                       on_change = setStage,
-                                      args = [6])
+                                      args = [10])
     disabledMinSamplesLeaf = False
     
     minSamplesLeafDelta = minSamplesLeaf - math.floor(minSamplesLeaf)
@@ -123,7 +123,7 @@ def setDTCParams():
                                             format = "%.1f",
                                             key = "dtc_min_weight_fraction_leaf", 
                                             on_change = setStage,
-                                            args = [6])
+                                            args = [10])
     disabledMinWeightFractionLeaf = False
     
     if minWeightFractionLeaf < 0 or minWeightFractionLeaf > 0.5:
@@ -140,7 +140,7 @@ def setDTCParams():
                                index = 3,
                                key = "dtc_max_features1",
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     disabledMaxFeatures = False
     
     if maxFeatures == "int or float":
@@ -151,7 +151,7 @@ def setDTCParams():
                                      format = "%f",
                                      key = "dtc_max_features2",
                                      on_change = setStage,
-                                     args = [6])
+                                     args = [10])
        
        if maxFeatures is not None:
            
@@ -177,7 +177,7 @@ def setDTCParams():
                                    format = "%f",
                                    key = "dtc_max_leaf_nodes",
                                    on_change = setStage,
-                                   args = [6],
+                                   args = [10],
                                    placeholder = "None")
     disabledMaxLeafNodes = False
     
@@ -203,7 +203,7 @@ def setDTCParams():
                                           format = "%.1f",
                                           key = "dtc_min_impurity_decrease", 
                                           on_change = setStage,
-                                          args = [6])
+                                          args = [10])
     disabledMinImpurityDecrease = False
     
     if minImpurityDecrease < 0:
@@ -220,7 +220,7 @@ def setDTCParams():
                                index = 1,
                                key = "dtc_class_weight", 
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     
     #----------
     # ccp_alpha
@@ -232,7 +232,7 @@ def setDTCParams():
                                format = "%.1f",
                                key = "dtc_ccp_alpha", 
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     disabledCcpAlpha = False
     
     if ccpAlpha < 0:
@@ -260,7 +260,7 @@ def setDTCParams():
     return params, disabled
     
 def setGPCParams():
-    "Set the Gaussian process classifier parameters."
+    '''Set the Gaussian process classifier parameters.'''
     
     #-------
     # kernel
@@ -273,7 +273,7 @@ def setGPCParams():
                                 step = 0.1,
                                 format = "%.1f",
                                 on_change = setStage,
-                                args = [6])
+                                args = [10])
         dictDisabled[kernelName + " Kernel: " + valueName] = False
         
         if kernelName in ["Dot Product", "Pairwise"]:
@@ -296,7 +296,7 @@ def setGPCParams():
                               options = ["fixed", "pair of floats"],
                               index = 1,
                               on_change = setStage,
-                              args = [6])
+                              args = [10])
         
         if bounds == "pair of floats":
         
@@ -305,7 +305,7 @@ def setGPCParams():
                                     step = 1e-6,
                                     format = "%.6f",
                                     on_change = setStage,
-                                    args = [6])
+                                    args = [10])
            dictDisabled[kernelName + " Kernel: " + valueName + "_bounds_float1"] = False
            
            if float1 < 0:
@@ -319,7 +319,7 @@ def setGPCParams():
                                     step = 1e-6,
                                     format = "%.6f",
                                     on_change = setStage,
-                                    args = [6])
+                                    args = [10])
            dictDisabled[kernelName + " Kernel: " + valueName + "_bounds_float2"] = False
            
            if float2 < 0:
@@ -346,7 +346,7 @@ def setGPCParams():
                           options = kernelOptions,
                           index = 7,
                           on_change = setStage,
-                          args = [6])
+                          args = [10])
     
     dictDisabled = {}
     
@@ -373,7 +373,7 @@ def setGPCParams():
                               step = 0.1,
                               format = "%.1f",
                               on_change = setStage,
-                              args = [6])
+                              args = [10])
          dictDisabled["nu"] = False 
                  
          if nu <= 0:
@@ -395,7 +395,7 @@ def setGPCParams():
                                options = metricOptions,
                                index = 4,
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
          kernel = sgpk.PairwiseKernel(gamma = value,
                                       gamma_bounds = bounds,
                                       metric = metric)
@@ -433,7 +433,7 @@ def setGPCParams():
                              options = ["fmin_l_bfgs_b", None],
                              index = 0,
                              on_change = setStage,
-                             args = [6])
+                             args = [10])
     
     #---------------------
     # n_restarts_optimizer
@@ -444,7 +444,7 @@ def setGPCParams():
                                          step = 1.0,
                                          format = "%f",
                                          on_change = setStage,
-                                         args = [6])
+                                         args = [10])
     disabledNRestartsOptimizer = False
     
     nRestartsOptimizerDelta = nRestartsOptimizer - math.floor(nRestartsOptimizer)
@@ -466,7 +466,7 @@ def setGPCParams():
                                      step = 1.0,
                                      format = "%f",
                                      on_change = setStage,
-                                     args = [6])
+                                     args = [10])
     disabledMaxIterPredict = False
     
     maxIterPredictDelta = maxIterPredict - math.floor(maxIterPredict)
@@ -487,7 +487,7 @@ def setGPCParams():
                               options = [True, False],
                               index = 0,
                               on_change = setStage,
-                              args = [6])
+                              args = [10])
     
     #------------
     # multi_class
@@ -497,7 +497,7 @@ def setGPCParams():
                               options = ["one_vs_rest", "one_vs_one"],
                               index = 0,
                               on_change = setStage,
-                              args = [6])
+                              args = [10])
     
     params = {}
     params["kernel"] = kernel
@@ -518,7 +518,7 @@ def setGPCParams():
     return params, disabled
 
 def setkNNCParams():
-    "Set the nearest neighbors classifier parameters."
+    '''Set the nearest neighbors classifier parameters.'''
     
     #-----------
     # n_neigbors
@@ -529,7 +529,7 @@ def setkNNCParams():
                                  step = 1.0,
                                  format = "%f",
                                  on_change = setStage,
-                                 args = [6])
+                                 args = [10])
     disabledNNeighbors = False
     
     nNeighborsDelta = nNeighbors - math.floor(nNeighbors)
@@ -550,7 +550,7 @@ def setkNNCParams():
                            options = ["uniform", "distance", None],
                            index = 0,
                            on_change = setStage,
-                           args = [6])
+                           args = [10])
     
     #----------
     # algorithm
@@ -560,7 +560,7 @@ def setkNNCParams():
                              options = ["auto", "ball_tree", "kd_tree", "brute"],
                              index = 0,
                              on_change = setStage,
-                             args = [6])
+                             args = [10])
     
     #----------
     # leaf_size
@@ -571,7 +571,7 @@ def setkNNCParams():
                                step = 1.0,
                                format = "%f",
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     disabledLeafSize = False
     
     leafSizeDelta = leafSize - math.floor(leafSize)
@@ -593,7 +593,7 @@ def setkNNCParams():
                         step = 0.1,
                         format = "%.1f",
                         on_change = setStage,
-                        args = [6])
+                        args = [10])
     disabledP = False
     
     if p < 1:
@@ -643,7 +643,7 @@ def setkNNCParams():
                           options = metricOptions,
                           index = index,
                           on_change = setStage,
-                          args = [6])
+                          args = [10])
     
     params = {}
     params["n_neighbors"] = nNeighbors
@@ -658,7 +658,7 @@ def setkNNCParams():
     return params, disabled
 
 def setLRParams():
-    "Set the logistic regression parameters."
+    '''Set the logistic regression parameters.'''
     
     #--------
     # penalty
@@ -668,7 +668,7 @@ def setLRParams():
                            options = [None, "l1", "l2", "elasticnet"],
                            index = 2,
                            on_change = setStage,
-                           args = [6])
+                           args = [10])
     
     #----
     # tol
@@ -679,7 +679,7 @@ def setLRParams():
                           step = 1e-5,
                           format = "%.5f",
                           on_change = setStage,
-                          args = [6])
+                          args = [10])
     disabledTol = False
     
     if tol < 0:
@@ -699,7 +699,7 @@ def setLRParams():
                            format = "%.1f",
                            key = "lrC",
                            on_change = setStage,
-                           args = [6])
+                           args = [10])
        disabledC = False
        
        if C <= 0:
@@ -715,7 +715,7 @@ def setLRParams():
                                 options = [True, False],
                                 index = 0,
                                 on_change = setStage,
-                                args = [6])
+                                args = [10])
     
     #------------------
     # intercept_scaling
@@ -726,7 +726,7 @@ def setLRParams():
                                        step = 0.1,
                                        format = "%.1f",
                                        on_change = setStage,
-                                       args = [6])
+                                       args = [10])
     disabledInterceptScaling = False
        
     if interceptScaling <= 0:
@@ -743,7 +743,7 @@ def setLRParams():
                                index = 1,
                                key = "lr_class_weight", 
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     
     #-------
     # solver
@@ -761,7 +761,7 @@ def setLRParams():
                           options = solverOptions,
                           index = 0,
                           on_change = setStage,
-                          args = [6])
+                          args = [10])
     
     #-----
     # dual
@@ -772,7 +772,7 @@ def setLRParams():
                            options = [True, False],
                            index = 1,
                            on_change = setStage,
-                           args = [6])
+                           args = [10])
     
     #---------
     # max_iter
@@ -783,7 +783,7 @@ def setLRParams():
                               step = 1.0,
                               format = "%f",
                               on_change = setStage,
-                              args = [6])
+                              args = [10])
     disabledMaxIter = False
     
     maxIterDelta = maxIter - math.floor(maxIter)
@@ -808,7 +808,7 @@ def setLRParams():
                               options = multiClassOptions,
                               index = 0,
                               on_change = setStage,
-                              args = [6])
+                              args = [10])
     
     #---------
     # l1_ratio
@@ -821,7 +821,7 @@ def setLRParams():
                                  step = 0.01,
                                  format = "%.2f",
                                  on_change = setStage,
-                                 args = [6],
+                                 args = [10],
                                  placeholder = "None")
        disabledL1Ratio = False
        
@@ -860,7 +860,7 @@ def setLRParams():
     return params, disabled
 
 def setRFCParams():
-    "Set the random forest classifier parameters."
+    '''Set the random forest classifier parameters.'''
     
     #-------------
     # n_estimators
@@ -871,7 +871,7 @@ def setRFCParams():
                                   step = 1.0,
                                   format = "%f",
                                   on_change = setStage,
-                                  args = [6])
+                                  args = [10])
     disabledNEstimators = False
     
     nEstimatorsDelta = nEstimators - math.floor(nEstimators)
@@ -893,7 +893,7 @@ def setRFCParams():
                              index = 0,
                              key = "rfc_criterion",
                              on_change = setStage,
-                             args = [6])
+                             args = [10])
     
     #----------
     # max_depth
@@ -905,7 +905,7 @@ def setRFCParams():
                                   format = "%f",
                                   key = "rfc_max_depth", 
                                   on_change = setStage,
-                                  args = [6],
+                                  args = [10],
                                   placeholder = "None")
     disabledMaxDepth = False
     
@@ -932,7 +932,7 @@ def setRFCParams():
                                       format = "%f",
                                       key = "rfc_min_samples_split", 
                                       on_change = setStage,
-                                      args = [6])
+                                      args = [10])
     disabledMinSamplesSplit = False
     
     minSamplesSplitDelta = minSamplesSplit - math.floor(minSamplesSplit)
@@ -957,7 +957,7 @@ def setRFCParams():
                                       format = "%f",
                                       key = "rfc_min_samples_leaf", 
                                       on_change = setStage,
-                                      args = [6])
+                                      args = [10])
     disabledMinSamplesLeaf = False
     
     minSamplesLeafDelta = minSamplesLeaf - math.floor(minSamplesLeaf)
@@ -982,7 +982,7 @@ def setRFCParams():
                                             format = "%.1f",
                                             key = "rfc_min_weight_fraction_leaf", 
                                             on_change = setStage,
-                                            args = [6])
+                                            args = [10])
     disabledMinWeightFractionLeaf = False
     
     if minWeightFractionLeaf < 0 or minWeightFractionLeaf > 0.5:
@@ -999,7 +999,7 @@ def setRFCParams():
                                index = 1,
                                key = "rfc_max_features1",
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     disabledMaxFeatures = False
     
     if maxFeatures == "int or float":
@@ -1010,7 +1010,7 @@ def setRFCParams():
                                      format = "%f",
                                      key = "rfc_max_features2",
                                      on_change = setStage,
-                                     args = [6])
+                                     args = [10])
        
        if maxFeatures is not None:
            
@@ -1036,7 +1036,7 @@ def setRFCParams():
                                    format = "%f",
                                    key = "rfc_max_leaf_nodes",
                                    on_change = setStage,
-                                   args = [6],
+                                   args = [10],
                                    placeholder = "None")
     disabledMaxLeafNodes = False
     
@@ -1062,7 +1062,7 @@ def setRFCParams():
                                           format = "%.1f",
                                           key = "rfc_min_impurity_decrease", 
                                           on_change = setStage,
-                                          args = [6])
+                                          args = [10])
     disabledMinImpurityDecrease = False
     
     if minImpurityDecrease < 0:
@@ -1078,7 +1078,7 @@ def setRFCParams():
                              options = [True, False],
                              index = 0,
                              on_change = setStage,
-                             args = [6])
+                             args = [10])
      
     #----------
     # oob_score
@@ -1089,7 +1089,7 @@ def setRFCParams():
                                options = [True, False],
                                index = 1,
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     
     #-------------
     # class_weight
@@ -1100,7 +1100,7 @@ def setRFCParams():
                                index = 2,
                                key = "rfc_class_weight", 
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     
     #----------
     # ccp_alpha
@@ -1112,7 +1112,7 @@ def setRFCParams():
                                format = "%.1f",
                                key = "rfc_ccp_alpha", 
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     disabledCcpAlpha = False
     
     if ccpAlpha < 0:
@@ -1131,7 +1131,7 @@ def setRFCParams():
                                     step = 1.0,
                                     format = "%f",
                                     on_change = setStage,
-                                    args = [6],
+                                    args = [10],
                                     placeholder = "None")
        disabledMaxSamples = False
        
@@ -1176,7 +1176,7 @@ def setRFCParams():
     return params, disabled
 
 def setSVCParams():
-    "Set the support vector classifier parameters."
+    '''Set the support vector classifier parameters.'''
     
     #--
     # C
@@ -1188,7 +1188,7 @@ def setSVCParams():
                         format = "%.1f",
                         key = "svcC",
                         on_change = setStage,
-                        args = [6])
+                        args = [10])
     disabledC = False
        
     if C <= 0:
@@ -1204,7 +1204,7 @@ def setSVCParams():
                           options = ["linear", "poly", "rbf", "sigmoid", "precomputed"],
                           index = 2,
                           on_change = setStage,
-                          args = [6])
+                          args = [10])
     
     #-------
     # degree
@@ -1217,7 +1217,7 @@ def setSVCParams():
                                 step = 1.0,
                                 format = "%f",
                                 on_change = setStage,
-                                args = [6])
+                                args = [10])
        disabledDegree = False
        
        degreeDelta = degree - math.floor(degree)
@@ -1238,7 +1238,7 @@ def setSVCParams():
                           options = ["scale", "auto", "float"],
                           index = 0,
                           on_change = setStage,
-                          args = [6])
+                          args = [10])
     gammaCopy = gamma
     
     if gamma == "float":
@@ -1248,7 +1248,7 @@ def setSVCParams():
                                step = 0.1,
                                format = "%.1f",
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
        disabledGamma = False
        
        if gamma is not None:
@@ -1269,7 +1269,7 @@ def setSVCParams():
                                step = 0.1,
                                format = "%.1f",
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     
     #----------
     # shrinking
@@ -1279,7 +1279,7 @@ def setSVCParams():
                              options = [True, False],
                              index = 0,
                              on_change = setStage,
-                             args = [6])
+                             args = [10])
         
     #----
     # tol
@@ -1290,7 +1290,7 @@ def setSVCParams():
                           step = 1e-4,
                           format = "%.4f",
                           on_change = setStage,
-                          args = [6])
+                          args = [10])
     disabledTol = False
            
     if tol <= 0:
@@ -1307,7 +1307,7 @@ def setSVCParams():
                                 step = 1.0,
                                 format = "%.1f",
                                 on_change = setStage,
-                                args = [6])
+                                args = [10])
     disabledCacheSize = False
            
     if cacheSize <= 0:
@@ -1323,7 +1323,7 @@ def setSVCParams():
                                options = ["balanced", None],
                                index = 1,
                                on_change = setStage,
-                               args = [6])
+                               args = [10])
     
     #---------
     # max_iter
@@ -1334,7 +1334,7 @@ def setSVCParams():
                               step = 1.0,
                               format = "%f",
                               on_change = setStage,
-                              args = [6])
+                              args = [10])
     disabledMaxIter = False
     
     maxIterDelta = maxIter - math.floor(maxIter)
@@ -1355,7 +1355,7 @@ def setSVCParams():
                                          options = ["ovo", "ovr"],
                                          index = 1,
                                          on_change = setStage,
-                                         args = [6])
+                                         args = [10])
     
     #-----------
     # break_ties
@@ -1365,7 +1365,7 @@ def setSVCParams():
                              options = [True, False],
                              index = 1,
                              on_change = setStage,
-                             args = [6])
+                             args = [10])
     
     params = {}
     params["C"] = C
@@ -1396,7 +1396,7 @@ def setSVCParams():
     return params, disabled
 
 def setModelParams(modelName):
-    "Set the model parameters."
+    '''Set the model parameters.'''
     
     if modelName == "Decision Tree Classifier":
        params, disabled = setDTCParams() 
