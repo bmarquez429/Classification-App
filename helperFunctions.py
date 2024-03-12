@@ -1,7 +1,7 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: March 9, 2024
+Date Modified: March 13, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ model4 = "Logistic Regression"
 model5 = "Random Forest Classifier"
 model6 = "Support Vector Classifier"
 
-def binarizeTarget(dataset, classes, targetVariable, variableType):
+def binarizeTarget(dataset, classes, targetVariable, variableType, stage):
     '''Binarize a target variable.'''
     
     if variableType == "categorical":
@@ -25,7 +25,7 @@ def binarizeTarget(dataset, classes, targetVariable, variableType):
        positiveClasses = st.multiselect(label = "Select the classes that will be map to 1.",
                                         options = classes,
                                         on_change = setStage,
-                                        args = [3],
+                                        args = [stage],
                                         placeholder = "Select class(es)")
     
        nUniqueValues = len(classes)
@@ -36,7 +36,7 @@ def binarizeTarget(dataset, classes, targetVariable, variableType):
          
              st.markdown(":red[You cannot select all the classes since at least one class should be \
                           map to 0. Please edit your selection.]")
-             setStage(3)
+             setStage(stage)
         
           else:
         
@@ -44,12 +44,12 @@ def binarizeTarget(dataset, classes, targetVariable, variableType):
                        map to 1.")         
                
              st.button(label = "Complete selection", key = "positiveClassesSelection", on_click = setStage, 
-                       args = [5])
+                       args = [6])
         
-             dataset["binarized target"] = dataset[targetVariable].apply(lambda x: 1 if x in positiveClasses else 0)
+             dataset["binarized " + targetVariable] = dataset[targetVariable].apply(lambda x: 1 if x in positiveClasses else 0)
 
        else:
-          setStage(3)
+          setStage(stage)
           
     elif variableType == "continuous": 
         
@@ -58,31 +58,53 @@ def binarizeTarget(dataset, classes, targetVariable, variableType):
                                      step = 1.0,
                                      format = "%.1f",
                                      on_change = setStage,
-                                     args = [3])
+                                     args = [stage])
         
          st.write("Click the button below to complete the mapping of values to 1 and 0 according to the selected \
                    threshold.")         
            
          st.button(label = "Complete mapping", key = "positiveClassesMapping", on_click = setStage, 
-                   args = [5])
+                   args = [6])
          
         
          y = dataset[[targetVariable]]
          binarizer = Binarizer(threshold = threshold)
          binarizer.fit(y)
-         dataset["binarized target"] = binarizer.transform(y).astype(int)
+         dataset["binarized " + targetVariable] = binarizer.transform(y).astype(int)
          
-         
-         
+def changeTargetVariable():
+    '''Delete the confirmTargetVariable key.'''
     
-def displayData(data, header, displayInstancesCount = True):
-    '''Display data.'''
+    del st.session_state["confirmTargetVariable"]
+ 
+def confirmTargetVariable(targetVariable = None):
+    '''Confirm a selected target variable.'''
+    
+    st.session_state.stage = 3
+    st.session_state.targetVariable = targetVariable 
+    st.session_state.toTargetVariable = True
+    
+    if "confirmTargetVariable" not in st.session_state:
+       st.session_state.confirmTargetVariable = False  
+    
+    st.session_state.confirmTargetVariable = True
+
+def displayDataset(dataset, header, targetVariable = None, displayInstancesCount = True):
+    '''Display dataset.'''
     
     st.markdown(header)
-    st.dataframe(data, height = 215)
+    
+    if targetVariable is not None:
+       
+       columns = dataset.columns.tolist()
+       columns.remove(targetVariable)
+       columns = columns + [targetVariable]
+       dataset = dataset[columns]
+
+    st.dataframe(dataset, height = 215)
     
     if displayInstancesCount:
-       st.write("Number of Instances = ", data.shape[0])
+       st.write("Number of Instances = ", dataset.shape[0])
     
 def printTrainingResults(trainingSucceeded, trainingFailed, messagePart):
     '''Print a message regarding the result(s) of model training.'''
@@ -180,7 +202,7 @@ def setAllOptions():
     else:
        st.session_state.allOptions = False
        
-    setStage(8)
+    setStage(10)
 
 def setOptions():
     '''Change the values of the model keys.'''
@@ -203,14 +225,36 @@ def setOptions():
        st.session_state[model5] = False
        st.session_state[model6] = False
        
-    setStage(8)
+    setStage(10)
     
-def setStage(i):
-    '''Change the value of the stage key.'''
+def setStage(i, targetVariable = None):
+    '''Change the value of the stage key and perform certain actions according
+       to the value of the stage key.'''
     
     st.session_state.stage = i
     
-    if i == 0 or i == 6:
+    if i == 0:
+       
+       if "targetVariable" in st.session_state:
+          del st.session_state["targetVariable"]
+          
+       if "toTargetVariable" in st.session_state:
+          del st.session_state["toTargetVariable"]
+          
+       if "confirmTargetVariable" in st.session_state:
+          del st.session_state["confirmTargetVariable"]
+          
+       if "toTransformation" in st.session_state:
+          del st.session_state["toTransformation"]
+              
+    if i == 0 or i == 8:
        
        if "trainTestSplit" in st.session_state:
           del st.session_state["trainTestSplit"]
+          
+    if i <= 3:
+        
+       st.session_state.toTargetVariable = False
+       
+    if i <= 6:
+       st.session_state.toTransformation = False
