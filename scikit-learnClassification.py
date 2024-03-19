@@ -1,16 +1,16 @@
 """
-         File: scikit-learnClassification.py
+         File: sci-kit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: March 13, 2024
-----------------------------------------------------------------------------------------
-Walk the user through the steps in training and testing one or more classifiers using a 
+Date Modified: March 20, 2024
+----------------------------------------------------------------------------------------------
+Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn."
-----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 """
 
-from helperFunctions import binarizeTarget, changeTargetVariable, confirmTargetVariable, \
-                            displayDataset, printTrainingResults, setAllOptions, setOptions, \
-                            setStage
+from helperFunctions import actOnClassImbalance, binarizeTarget, changeTargetVariable, \
+                            confirmTargetVariable, displayClassDistribution, displayDataset, \
+                            printTrainingResults, setAllOptions, setOptions, setStage
 from joblib import dump
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import load_breast_cancer, load_diabetes, load_digits, load_iris, load_wine
@@ -29,6 +29,7 @@ import modelParams
 import numpy as np
 import os
 import pandas as pd
+import scipy
 import streamlit as st
 
 st.markdown("## Binary Classification Using `scikit-learn`")
@@ -54,7 +55,7 @@ if "datasetAvailability" not in st.session_state:
    
 if "targetVariable" not in st.session_state:
    st.session_state.targetVariable = None
-   
+      
 if "toTargetVariable" not in st.session_state:
    st.session_state.toTargetVariable = False
    
@@ -66,10 +67,19 @@ if "nUniqueValues" not in st.session_state:
    
 if "binarize" not in st.session_state:
    st.session_state.binarize = False
+
+if "selectBalancingMethod" not in st.session_state:
+   st.session_state.selectBalancingMethod = False
    
-if "toTransformation" not in st.session_state:
-   st.session_state.toTransformation = False
-         
+if "runBalancingMethod" not in st.session_state:
+   st.session_state.runBalancingMethod = False
+   
+if "randomUnderSampling" not in st.session_state:
+   st.session_state.randomUnderSampling = False
+   
+if "toCategorical" not in st.session_state:
+   st.session_state.toCategorical = False
+               
 if "trainingSucceeded" not in st.session_state:   
    st.session_state.trainingSucceeded = []
    
@@ -115,7 +125,7 @@ if st.session_state.stage == 1:
 #--------------------------
 
 if st.session_state.stage >= 2:
-   
+       
    st.sidebar.button(label = "Reset", 
                      help = "Clicking this button at any time will bring you back to the intro page",
                      on_click = setStage, 
@@ -286,8 +296,9 @@ if st.session_state.stage >= 4 or st.session_state.toTargetVariable:
               else:
                  variableType = "categorical"
                  
-              binarizeTarget(dataset = dataset, classes = uniqueValues, targetVariable = targetVariable,
-                             variableType = variableType, stage = 4)
+              output = binarizeTarget(dataset = dataset, classes = uniqueValues, targetVariable = targetVariable,
+                                      variableType = variableType, currentStage = 4, nextStage = 7,
+                                      positiveClassesKey = datasetName)
     
    features = variables.copy()
    
@@ -299,9 +310,9 @@ if st.session_state.stage >= 4 or st.session_state.toTargetVariable:
 #--------------------------------------------------------------------------------
 
 if st.session_state.stage >= 5:
-   
-   if datasetAvailability in [case1, case2]:
        
+   if nUniqueValues > 2 and datasetAvailability in [case1, case2]:
+     
       type1 = "continuous variable"
       type2 = "categorical variable with more than 2 classes"
       vType = st.radio(label = "Please identify the type of the selected variable.",
@@ -311,20 +322,46 @@ if st.session_state.stage >= 5:
                        args = [5])
     
       if vType is not None:
+          
+         if datasetAvailability == case1:
+            nextStage = 7
+         elif datasetAvailability == case2:
+              nextStage = 6
         
          if vType == type1:
-            binarizeTarget(dataset = dataset, classes = uniqueValues, targetVariable = targetVariable,
-                           variableType = "continuous", stage = 5)
+            binarizer = binarizeTarget(dataset = datasetHolder, classes = uniqueValues, targetVariable = targetVariable,
+                                       variableType = "continuous", currentStage = 5, nextStage = nextStage)
          else:
-            binarizeTarget(dataset = dataset, classes = uniqueValues, targetVariable = targetVariable,
-                           variableType = "categorical", stage = 5) 
+            positiveClasses = binarizeTarget(dataset = datasetHolder, classes = uniqueValues, targetVariable = targetVariable,
+                                             variableType = "categorical", currentStage = 5, nextStage = nextStage)
+   
+#-------------------------------------------------------------------------------------------------
+# If case 2 is selected, display the class distribution of the target variable in the training set
+# and select on how to handle an imbalanced class distribution.
+#-------------------------------------------------------------------------------------------------
 
+if (st.session_state.stage >= 6 or (st.session_state.confirmTargetVariable and nUniqueValues == 2)) and \
+   datasetAvailability == case2:
+       
+   classDistribution = displayClassDistribution(datasetHolder = datasetHolder, 
+                                                targetVariable = targetVariable, 
+                                                nUniqueValues = nUniqueValues)
+    
+   trainSet = actOnClassImbalance(classDistribution = classDistribution,
+                                  nUniqueValues = nUniqueValues, 
+                                  trainSet = trainSet, 
+                                  features = features, 
+                                  targetVariable = targetVariable,
+                                  currentStage = 6,
+                                  nextStage = 7)
+      
 #-----------------------------------------------------------------------------
 # Select features that are categorical or that will be treated as categorical.
-#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------      
+      
+if st.session_state.stage >= 7 or (st.session_state.toCategorical and nUniqueValues == 2 and \
+                                   datasetAvailability == case1):         
 
-if st.session_state.stage >= 6 or (st.session_state.confirmTargetVariable and nUniqueValues == 2):
-   
    if datasetAvailability in [case1, case2]:
        
       st.write(" ") 
@@ -336,7 +373,7 @@ if st.session_state.stage >= 6 or (st.session_state.confirmTargetVariable and nU
       categoricalFeatures = st.multiselect(label = label1 + label2 + label3 + label4,
                                            options = features + ["All", "None"],
                                            on_change = setStage,
-                                           args = [6],
+                                           args = [7],
                                            placeholder = "Select feature(s), All, or None")
    
       if len(categoricalFeatures) > 0:
@@ -344,79 +381,40 @@ if st.session_state.stage >= 6 or (st.session_state.confirmTargetVariable and nU
          if set(categoricalFeatures) == {"All", "None"}:
             
              st.markdown(":red[You cannot select All together with None. Please edit your selection.]")
-             setStage(6)
+             setStage(7)
              
          elif len(categoricalFeatures) >= 2 and "All" in categoricalFeatures:
           
               st.markdown(":red[You cannot select All together with one or more features. Please edit \
                            your selection.]")
-              setStage(6)
+              setStage(7)
             
          elif len(categoricalFeatures) >= 2 and "None" in categoricalFeatures:
           
               st.markdown(":red[You cannot select None together with one or more features. Please edit \
                            your selection.]")
-              setStage(6)
+              setStage(7)
          
          else:
-         
+            
+            if datasetAvailability == case1:
+               args = [8]
+            else:
+               args = [10]
+            
             st.write("Click the button below to complete the selection of categorical features \
                       or if no features are categorical.")            
             st.button(label = "Complete selection", key = "catFeaturesSelection", on_click = setStage, 
-                      args = [7])
+                      args = args)
 
       else:
-          setStage(6)
+          setStage(7)
           
    else:
        
       categoricalFeatures = ["None"]
-      
-      if "toTransformation" not in st.session_state:
-         st.session_state.toTransformation = False
-         
-      st.session_state.toTransformation = True
-          
-#-----------------------------------------------------------------------
-# Select whether or not transformations will be applied to the features.
-#-----------------------------------------------------------------------
-        
-if st.session_state.stage >= 7 or st.session_state.toTransformation:
-    
-    st.write(" ")
-    
-    label = "Please select whether or not transformations will be applied to the features."
-    
-    if categoricalFeatures[0] == "None":
-        
-       option1 = "Standardize the continuous features."
-       messagePart = "continuous"
-       
-    elif categoricalFeatures[0] == "All" or len(categoricalFeatures) == len(features):
-        
-         option1 = "One-hot encode the categorical features."
-         messagePart = "categorical"
-         
-    else:
-        
-         option1 = "Standardize the continuous features and one-hot encode the categorical features."
-         messagePart = ""
-       
-    option2 = "Retain the form of the " + messagePart + " features."
-    
-    featureTransformation = st.radio(label = label, 
-                                     options = [option1, option2], 
-                                     index = None,
-                                     on_change = setStage,
-                                     args = [7])
-    
-    if datasetAvailability in [case1, case3]:
-       args = [8]
-    else:
-       args = [9]
-       
-    st.button(label = "Next", key = "featureTransformationNext", on_click = setStage, args = args)
-       
+      toSplit = True
+ 
 #--------------------------------------------------------------------------------------
 # If case1 or case3 is selected, split the dataset into a training set and a test set .
 #--------------------------------------------------------------------------------------         
@@ -461,10 +459,10 @@ if st.session_state.stage >= 8 or toSplit:
       
       st.button(label = "Display training set", on_click = setStage, args = [9])
    
-#---------------------------------------------------------------------------------------------------------
-# If case1 or case3 is selected, display the training set. If option1 is selected, transform the features.
-# in the training set.
-#---------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# If case1 or case3 is selected, display the training set and the class distribution of the 
+# target variable in the training set. 
+#-------------------------------------------------------------------------------------------
 
 if st.session_state.stage >= 9: 
     
@@ -487,8 +485,51 @@ if st.session_state.stage >= 9:
       testSet = pd.concat([xTest, yTest], axis = 1)
       
       displayDataset(dataset = trainSet, header = "**Training Set**")
+      classDistribution = displayClassDistribution(datasetHolder = trainSet, 
+                                                   targetVariable = targetVariable, 
+                                                   nUniqueValues = nUniqueValues)
+      trainSet = actOnClassImbalance(classDistribution = classDistribution,
+                                     nUniqueValues = nUniqueValues, 
+                                     trainSet = trainSet, 
+                                     features = features, 
+                                     targetVariable = targetVariable,
+                                     currentStage = 9,
+                                     nextStage = 10)
+            
+#-----------------------------------------------------------------------
+# Select whether or not transformations will be applied to the features.
+#-----------------------------------------------------------------------
+        
+if st.session_state.stage >= 10:
+    
+   st.write(" ")
+    
+   label = "Please select whether or not transformations will be applied to the features."
+    
+   if categoricalFeatures[0] == "None":
+        
+      ftOption1 = "Standardize the continuous features."
+      messagePart = "continuous"
        
-   if featureTransformation == option1:
+   elif categoricalFeatures[0] == "All" or len(categoricalFeatures) == len(features):
+        
+        ftOption1 = "One-hot encode the categorical features."
+        messagePart = "categorical"
+         
+   else:
+        
+        ftOption1 = "Standardize the continuous features and one-hot encode the categorical features."
+        messagePart = ""
+       
+   ftOption2 = "Retain the form of the " + messagePart + " features."
+    
+   featureTransformation = st.radio(label = label, 
+                                    options = [ftOption1, ftOption2], 
+                                    index = None,
+                                    on_change = setStage,
+                                    args = [10])
+           
+   if featureTransformation == ftOption1:
      
       if categoricalFeatures[0] == "All":
          colTransformer = ColumnTransformer(transformers = [("categorical", OneHotEncoder(drop = "first"), features)])
@@ -500,11 +541,18 @@ if st.session_state.stage >= 9:
                                               remainder = StandardScaler())
        
       colTransformer.fit(trainSet[features])
-        
+      
       xTrain = colTransformer.transform(trainSet[features])
       
+      if scipy.sparse.issparse(xTrain):
+         xTrain = xTrain.toarray()
+      
       if datasetAvailability == case2:
-         yTrain = trainSet[[targetVariable]]
+          
+         if nUniqueValues > 2:
+            yTrain = trainSet[["binarized " + targetVariable]]
+         elif nUniqueValues == 2:
+              yTrain = trainSet[[targetVariable]]
      
       transformedFeatures = colTransformer.get_feature_names_out().tolist()
       
@@ -523,23 +571,25 @@ if st.session_state.stage >= 9:
          transformedTrainSet = pd.concat([xTrainDf, trainSet[targetVariable], yTrain], axis = 1)
       elif nUniqueValues == 2:
            transformedTrainSet = pd.concat([xTrainDf, yTrain], axis = 1)
-           
+          
       displayDataset(dataset = transformedTrainSet, header = "**Training Set with Transformed Features**",
                      displayInstancesCount = False)
        
    else:
       xTrain = trainSet[features].to_numpy()
-            
-   st.write(" ")
-   st.write("Click the button below to select at least one model to train.")     
+   
+   if featureTransformation:
+         
+      st.write(" ")
+      st.write("Click the button below to select at least one model to train.")     
     
-   st.button(label = "Select one or more models", on_click = setStage, args = [10]) 
+      st.button(label = "Select one or more models", on_click = setStage, args = [11]) 
     
 #------------------------------------
 # Select at least one model to train.
 #------------------------------------
 
-if st.session_state.stage >= 10: 
+if st.session_state.stage >= 11: 
    
    if nUniqueValues > 2:
       yTrain = trainSet["binarized " + targetVariable].to_numpy()
@@ -567,18 +617,18 @@ if st.session_state.stage >= 10:
        selected += st.session_state[option]
    
    st.write("Click the button below to complete the selection of models.")
-   clicked = st.button(label = "Complete selection", key = "modelSelection", on_click = setStage, args = [11])
+   clicked = st.button(label = "Complete selection", key = "modelSelection", on_click = setStage, args = [12])
    
    if clicked and selected == 0:
        
       st.markdown(":red[Please select at least one model to train.]")
-      setStage(10)
+      setStage(11)
    
 #--------------------------------------------------------------------
 # Click to set the values of the parameters of the selected model(s).
 #--------------------------------------------------------------------
     
-if st.session_state.stage >= 11:
+if st.session_state.stage >= 12:
     
     trueOptions = []
     for option in options:
@@ -609,13 +659,13 @@ if st.session_state.stage >= 11:
          st.write("You selected all the available models. Click the button below to set the values \
                    of the model parameters.")
              
-    st.button(label = "Set model parameters", on_click = setStage, args = [12])
+    st.button(label = "Set model parameters", on_click = setStage, args = [13])
 
 #-----------------------------------------------------------
 # Set the values of the parameters of the selected model(s).
 #-----------------------------------------------------------
     
-if st.session_state.stage >= 12:
+if st.session_state.stage >= 13:
     
    st.write("")
     
@@ -673,16 +723,16 @@ if st.session_state.stage >= 12:
    cols = st.columns(3)
    
    with cols[0]:
-        st.button(label = "Reset model parameters", on_click = setStage, args = [11])   
+        st.button(label = "Reset model parameters", on_click = setStage, args = [12])   
         
    with cols[1]:
-        st.button(label = "Confirm model parameters", on_click = setStage, args = [13], disabled = disabled)
+        st.button(label = "Confirm model parameters", on_click = setStage, args = [14], disabled = disabled)
 
 #-----------------------------
 # Train the selected model(s).
 #-----------------------------
 
-if st.session_state.stage >= 13:
+if st.session_state.stage >= 14:
     
    if "models" not in st.session_state:
       st.session_state.models = {}
@@ -695,7 +745,7 @@ if st.session_state.stage >= 13:
    st.write(" ") 
    st.write("Click the button below to train the selected " + messagePart + ".")
 
-   if st.button(label = "Train " + messagePart, on_click = setStage, args = [14]): 
+   if st.button(label = "Train " + messagePart, on_click = setStage, args = [15]): 
       
       trainingSucceeded = []
       trainingFailed = []
@@ -730,7 +780,7 @@ if st.session_state.stage >= 13:
 # Display or upload the test set.
 #--------------------------------  
 
-if st.session_state.stage >= 14:
+if st.session_state.stage >= 15:
     
    trainingSucceeded = st.session_state.trainingSucceeded
    trainingFailed = st.session_state.trainingFailed
@@ -746,12 +796,12 @@ if st.session_state.stage >= 14:
                             messagePart = messagePart) 
        
        if ts == 0:
-          setStage(14)
+          setStage(15)
        else:
                     
-          st.button(label = "Display test set", on_click = setStage, args = [15])
+          st.button(label = "Display test set", on_click = setStage, args = [16])
        
-          if st.session_state.stage >= 15:
+          if st.session_state.stage >= 16:
              displayDataset(dataset = testSet, header = "**Test Set**")
        
    else:
@@ -763,33 +813,58 @@ if st.session_state.stage >= 14:
    
       uploadedTestSet = st.sidebar.file_uploader(label = "Upload the test set in `csv` file format.",
                                                  on_change = setStage, 
-                                                 args = [15])   
+                                                 args = [16])   
    
       if uploadedTestSet is not None:
     
          testSet = pd.read_csv(uploadedTestSet)
-         displayDataset(dataset = testSet, header = "**Test Set**")
+         
+         if nUniqueValues > 2:
+            
+            columns = testSet.columns.tolist()
+            columns.remove(targetVariable)
+            columns = columns + [targetVariable]
+            testSet = testSet[columns] 
+            
+            if vType == type1:
+                 
+               y = testSet[[targetVariable]] 
+               testSet["binarized " + targetVariable] = binarizer.transform(y).astype(int)
+               
+            else:
+               testSet["binarized " + targetVariable] = testSet[targetVariable].apply(lambda x: 1 if x in positiveClasses else 0)
+               
+            displayDataset(dataset = testSet, header = "**Test Set**")
+               
+         else:
+            displayDataset(dataset = testSet, header = "**Test Set**", targetVariable = targetVariable)
       
       else:
-         setStage(14)
+         setStage(15)
    
 #-----------------------------------
 # Click to display the ROC curve(s).
 #-----------------------------------
 
-if st.session_state.stage >= 15:
+if st.session_state.stage >= 16:
    
-   if featureTransformation == option1:
+   if featureTransformation == ftOption1:
        
       try:
            
          xTest = colTransformer.transform(testSet[features])  
          
+         if scipy.sparse.issparse(xTest):
+            xTest = xTest.toarray()
+         
          if datasetAvailability == case2:
-            yTest = testSet[[targetVariable]]
-         
+            
+            if nUniqueValues > 2:
+               yTest = testSet[["binarized " + targetVariable]]
+            elif nUniqueValues == 2:
+                 yTest = testSet[[targetVariable]]
+            
          xTestDf = pd.DataFrame(xTest, index = testSet.index, columns = transformedFeatures)
-         
          
          if nUniqueValues > 2:
             transformedTestSet = pd.concat([xTestDf, testSet[targetVariable], yTest], axis = 1)
@@ -803,9 +878,18 @@ if st.session_state.stage >= 15:
        
       except:
           
-          st.markdown(":red[An error occured in transforming one or more columns of the test set. The error may be \
-                       avoided by increasing the train-test split ratio.]")
+          if st.session_state.randomUnderSampling:
+               messagePart = "The error may be avoided by re-running random under-sampling or selecting a \
+                              different balancing method."
+          elif datasetAvailability in [case1, case3]:
+               messagePart = "The error may be avoided by increasing the train-test split ratio."
+          else:
+               messagePart = ""
+             
+          st.markdown(":red[An error occured in transforming one or more columns of the test set. " + \
+                      messagePart + "]")
           toROC = False
+          setStage(16)
                       
    else:
        
@@ -835,7 +919,7 @@ if st.session_state.stage >= 15:
       st.write(" ")
       st.write("Click the button below to display the ROC " + messagePart2 + " of the " + messagePart1 + " on the test set.")
       
-      st.button(label = "Display the ROC " + messagePart2, on_click = setStage, args = [16])
+      st.button(label = "Display the ROC " + messagePart2, on_click = setStage, args = [17])
        
       st.write(" ")
       st.write(" ")
@@ -844,7 +928,7 @@ if st.session_state.stage >= 15:
 # Display the ROC curve(s).
 #--------------------------
 
-if st.session_state.stage >= 16:
+if st.session_state.stage >= 17:
        
    if nUniqueValues > 2: 
       yTest = testSet["binarized " + targetVariable].to_numpy() 
@@ -978,7 +1062,7 @@ if toSave:
    else:
       fullDataset = pd.concat([trainSet, testSet], ignore_index = True)
    
-   if featureTransformation == option1:
+   if featureTransformation == ftOption1:
        
       colTransformer.fit(fullDataset[features])     
       x = colTransformer.transform(fullDataset[features])
@@ -1019,7 +1103,7 @@ if toSave:
    
       filename += ".joblib"
 
-      if st.button(label = "Retrain and save" + messagePart + "model", on_click = setStage, args = [17]):
+      if st.button(label = "Retrain and save" + messagePart + "model", on_click = setStage, args = [18]):
                  
          model.fit(x, y)
          dump(model, filename) 
@@ -1040,7 +1124,7 @@ if toSave:
                 dataset (the union of the training and test sets) and save the retrained \
                 models.")
    
-      if st.button(label = "Retrain and save the" + messagePart + "models", on_click = setStage, args = [17]):
+      if st.button(label = "Retrain and save the" + messagePart + "models", on_click = setStage, args = [18]):
        
          for i in range(n):
           
@@ -1066,5 +1150,5 @@ if toSave:
 # Start over
 #-----------
 
-if st.session_state.stage >= 17:
+if st.session_state.stage >= 18:
    st.sidebar.button(label = 'Start Over', on_click = setStage, args = [0])
