@@ -1,7 +1,7 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: March 20, 2024
+Date Modified: March 21, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -41,18 +41,20 @@ def actOnClassImbalance(classDistribution, nUniqueValues, trainSet, features, ta
        balancing = st.radio(label = label, 
                             options = [bOption1, bOption2], 
                             index = 0,
-                            on_change = setStage,
+                            on_change = selectBalancingOption,
                             args = [currentStage])
-                 
+       
        st.button(label = "Next", key = "balancingNext", on_click = selectBalancingMethod, 
-                 args = [balancing, nextStage])
+                 args = [balancing, currentStage, nextStage])
     
        if st.session_state.selectBalancingMethod:
                
           balancingMethods = ["Random Under-sampling", "Random Over-sampling", "SMOTE", "ADASYN"] 
           balancingMethod = st.radio(label = "Please select the method to balance out the class distribution.",
                                      options = balancingMethods,
-                                     index = None)
+                                     index = None,
+                                     on_change = selectBalancingMethod,
+                                     args = [balancing, currentStage, nextStage, True])
          
           if balancingMethod is not None:
              
@@ -60,50 +62,75 @@ def actOnClassImbalance(classDistribution, nUniqueValues, trainSet, features, ta
              st.button(label = "Run balancing method", 
                        on_click = runBalancingMethod,
                        args = [balancingMethod, currentStage])
-             
-       if st.session_state.runBalancingMethod:
-               
-          if balancing == bOption1:
        
-             if balancingMethod == balancingMethods[0]: 
-                method = RandomUnderSampler()
-             elif balancingMethod == balancingMethods[1]:
-                 method = RandomOverSampler()
-             elif balancingMethod == balancingMethods[2]:
-                 method = SMOTE()
-             elif balancingMethod == balancingMethods[3]:
-                  method = ADASYN()      
-           
+       toContinueBalancing = False
+       
+       if st.session_state.runBalancingMethod:
+       
+          if balancingMethod == balancingMethods[0]: 
+             method = RandomUnderSampler()
+          elif balancingMethod == balancingMethods[1]:
+               method = RandomOverSampler()
+          elif balancingMethod == balancingMethods[2]:
+               method = SMOTE()
+          elif balancingMethod == balancingMethods[3]:
+               method = ADASYN()   
+               
+          st.session_state.method = method
+          
+          try:
+              
              if nUniqueValues > 2:
                 xTrainResampled, yTrainResampled = method.fit_resample(trainSet[features + [targetVariable]], 
                                                                        trainSet[["binarized " + targetVariable]]) 
              else:
                 xTrainResampled, yTrainResampled = method.fit_resample(trainSet[features], 
                                                                        trainSet[[targetVariable]])
-                  
+                
              if "resampling" not in st.session_state:
-                      
+                        
                 st.session_state.resampling = {}
                 st.session_state.resampling["xTrainResampled"] = xTrainResampled
                 st.session_state.resampling["yTrainResampled"] = yTrainResampled   
-                  
+                    
              xTrainResampled = st.session_state.resampling["xTrainResampled"]
              yTrainResampled = st.session_state.resampling["yTrainResampled"]
-               
+                 
              trainSet = pd.concat([xTrainResampled, yTrainResampled], axis = 1)
              
-          st.write(" ")
-          displayDataset(dataset = trainSet, header = "**Balanced Training Set**")
-          classDistribution = displayClassDistribution(datasetHolder = trainSet, 
-                                                       targetVariable = targetVariable, 
-                                                       nUniqueValues = nUniqueValues)
-            
-          st.button(label = "Next", key = "balancingMethodNext", on_click = setStage, args = [nextStage])
+             st.write(" ")
+             displayDataset(dataset = trainSet, header = "**Balanced Training Set**")
+             classDistribution = displayClassDistribution(datasetHolder = trainSet, 
+                                                          targetVariable = targetVariable, 
+                                                          nUniqueValues = nUniqueValues)
+               
+             st.button(label = "Next", key = "balancingMethodNext", on_click = setStage, args = [nextStage])
+             toContinueBalancing = True
           
+          except:
+              
+             st.markdown(":red[The selected balancing method did not run successfully. Please select a different \
+                         balancing method.]") 
+             
+       if toContinueBalancing:       
+                     
+          if balancing == bOption1:
+              
+             method = st.session_state.method
+             output = (trainSet, method)
+              
+          else:
+             output = trainSet
+             
+       else:
+          output = False
+       
     else:
+        
        st.button(label = "Next", key = "classDistributionNext", on_click = setStage, args = [nextStage]) 
+       output = trainSet
            
-    return trainSet
+    return output
        
 def binarizeTarget(dataset, classes, targetVariable, variableType, currentStage, nextStage, positiveClassesKey = 0):
     '''Binarize a target variable.'''
@@ -334,8 +361,8 @@ def printTrainingResults(trainingSucceeded, trainingFailed, messagePart):
              st.write(messagePart4)
 
 def runBalancingMethod(balancingMethod, currentStage):
-    '''Change the value of the runBalancingMwthod key and delete the resampling
-       key if it exists.'''
+    '''Change the values of the stage, runBalancingMethod, and randomUnderSampling keys
+       and delete the resampling key if it exists.'''
     
     st.session_state.stage = currentStage
     st.session_state.runBalancingMethod = True
@@ -346,16 +373,27 @@ def runBalancingMethod(balancingMethod, currentStage):
     if "resampling" in st.session_state:
        del st.session_state["resampling"]
     
-def selectBalancingMethod(balancing, i):
-    '''Change the value of the selectBalancingMethod key.'''
+def selectBalancingMethod(balancing, currentStage, nextStage, changeMethod = False):
+    '''Change the values of the selectBalancingMethod, stage, or runBalancingMethod keys.'''
     
     bOption1 = "Balance out the class distribution. (Recommended)"
     
     if balancing == bOption1:
         st.session_state.selectBalancingMethod = True
     else:
-        st.session_state.stage = i
-                     
+        st.session_state.stage = nextStage
+        
+    if changeMethod:
+        
+       st.session_state.stage = currentStage
+       st.session_state.runBalancingMethod = False
+       
+def selectBalancingOption(currentStage):
+    
+    st.session_state.stage = currentStage
+    st.session_state.selectBalancingMethod = False
+    st.session_state.runBalancingMethod = False
+
 def setAllOptions():
     '''Change the value of the allOptions key.'''
     
@@ -416,14 +454,13 @@ def setStage(i):
        if "randomUnderSampling" in st.session_state:
           del st.session_state["randomUnderSampling"]
           
+       if "resampling" in st.session_state:
+          del st.session_state["resampling"]
+          
        if "toCategorical" in st.session_state:
           del st.session_state["toCategorical"]
           
-    if i == 0:
         
-       if "resampling" in st.session_state:
-          del st.session_state["resampling"]
-                    
     if i <= 3:
        st.session_state.toTargetVariable = False
        

@@ -1,7 +1,7 @@
 """
          File: sci-kit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: March 20, 2024
+Date Modified: March 22, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn."
@@ -32,14 +32,14 @@ import pandas as pd
 import scipy
 import streamlit as st
 
+#-----------------------------------------------------------------
+# Create and initialize session state keys and display intro page.
+#-----------------------------------------------------------------
+
 st.markdown("## Binary Classification Using `scikit-learn`")
-             
-#------
-# Begin
-#------
 
 if "stage" not in st.session_state:
-   st.session_state.stage = 0
+    st.session_state.stage = 0
     
 if "case1" not in st.session_state:
    st.session_state.case1 = ""
@@ -76,6 +76,9 @@ if "runBalancingMethod" not in st.session_state:
    
 if "randomUnderSampling" not in st.session_state:
    st.session_state.randomUnderSampling = False
+   
+if "method" not in st.session_state:
+   st.session_state.method = None
    
 if "toCategorical" not in st.session_state:
    st.session_state.toCategorical = False
@@ -347,14 +350,21 @@ if (st.session_state.stage >= 6 or (st.session_state.confirmTargetVariable and n
                                                 targetVariable = targetVariable, 
                                                 nUniqueValues = nUniqueValues)
     
-   trainSet = actOnClassImbalance(classDistribution = classDistribution,
-                                  nUniqueValues = nUniqueValues, 
-                                  trainSet = trainSet, 
-                                  features = features, 
-                                  targetVariable = targetVariable,
-                                  currentStage = 6,
-                                  nextStage = 7)
-      
+   balancingOutput = actOnClassImbalance(classDistribution = classDistribution,
+                                         nUniqueValues = nUniqueValues, 
+                                         trainSet = trainSet, 
+                                         features = features, 
+                                         targetVariable = targetVariable,
+                                         currentStage = 6,
+                                         nextStage = 7)
+   
+   if type(balancingOutput) == tuple:
+      trainSet = balancingOutput[0]
+   elif type(balancingOutput) == pd.core.frame.DataFrame:
+      trainSet = balancingOutput
+   else:
+      setStage(6)
+   
 #-----------------------------------------------------------------------------
 # Select features that are categorical or that will be treated as categorical.
 #-----------------------------------------------------------------------------      
@@ -488,13 +498,20 @@ if st.session_state.stage >= 9:
       classDistribution = displayClassDistribution(datasetHolder = trainSet, 
                                                    targetVariable = targetVariable, 
                                                    nUniqueValues = nUniqueValues)
-      trainSet = actOnClassImbalance(classDistribution = classDistribution,
-                                     nUniqueValues = nUniqueValues, 
-                                     trainSet = trainSet, 
-                                     features = features, 
-                                     targetVariable = targetVariable,
-                                     currentStage = 9,
-                                     nextStage = 10)
+      balancingOutput = actOnClassImbalance(classDistribution = classDistribution,
+                                            nUniqueValues = nUniqueValues, 
+                                            trainSet = trainSet, 
+                                            features = features, 
+                                            targetVariable = targetVariable,
+                                            currentStage = 9,
+                                            nextStage = 10)
+         
+      if type(balancingOutput) == tuple:
+         trainSet = balancingOutput[0]
+      elif type(balancingOutput) == pd.core.frame.DataFrame:
+         trainSet = balancingOutput
+      else:
+         setStage(9)
             
 #-----------------------------------------------------------------------
 # Select whether or not transformations will be applied to the features.
@@ -546,13 +563,11 @@ if st.session_state.stage >= 10:
       
       if scipy.sparse.issparse(xTrain):
          xTrain = xTrain.toarray()
-      
-      if datasetAvailability == case2:
           
-         if nUniqueValues > 2:
-            yTrain = trainSet[["binarized " + targetVariable]]
-         elif nUniqueValues == 2:
-              yTrain = trainSet[[targetVariable]]
+      if nUniqueValues > 2:
+         yTrain = trainSet[["binarized " + targetVariable]]
+      elif nUniqueValues == 2:
+           yTrain = trainSet[[targetVariable]]
      
       transformedFeatures = colTransformer.get_feature_names_out().tolist()
       
@@ -1058,34 +1073,53 @@ if toSave:
    st.write(" ") 
    
    if datasetAvailability in [case1, case3]:
-      fullDataset = dataset.copy()
+      fullDataset = dataset
    else:
-      fullDataset = pd.concat([trainSet, testSet], ignore_index = True)
-   
-   if featureTransformation == ftOption1:
+      fullDataset = pd.concat([datasetHolder, testSet], ignore_index = True)
+            
+   if type(balancingOutput) == tuple:
        
-      colTransformer.fit(fullDataset[features])     
-      x = colTransformer.transform(fullDataset[features])
+      balancingMethod = balancingOutput[1] 
+      
+      if nUniqueValues > 2:
+         xDatasetResampled, yDatasetResampled = balancingMethod.fit_resample(fullDataset[features], 
+                                                                             fullDataset[["binarized " + targetVariable]]) 
+      else:
+         xDatasetResampled, yDatasetResampled = balancingMethod.fit_resample(fullDataset[features], 
+                                                                             fullDataset[[targetVariable]])
+         
+      datasetRetrain = pd.concat([xDatasetResampled, yDatasetResampled], axis = 1)
+      messagePart1 = " the dataset obtained by balancing out the class distribution of "
       
    else:
-      x = fullDataset[features].to_numpy()
+       
+      datasetRetrain = fullDataset
+      messagePart1 = " "
+      
+   if featureTransformation == ftOption1:
+       
+      colTransformer.fit(datasetRetrain[features])     
+      x = colTransformer.transform(datasetRetrain[features])
+      
+   else:
+      x = datasetRetrain[features].to_numpy()
    
    if nUniqueValues > 2: 
-      y = fullDataset["binarized " + targetVariable].to_numpy()
+      y = datasetRetrain["binarized " + targetVariable].to_numpy()
    else:
-      y = fullDataset[targetVariable].to_numpy()
+      y = datasetRetrain[targetVariable].to_numpy()
    
    if ts == 1 or n == 1:
        
       if n == 1 and ts == 2:
-         messagePart = " the better "
+         messagePart2 = " the better "
       elif n == 1 and ts >= 3:
-           messagePart = " the best "
+           messagePart2 = " the best "
       else:
-           messagePart = " "
+           messagePart2 = " "
       
-      st.write("Click the button below to retrain" + messagePart + "model using the full \
-                dataset (the union of the training and test sets) and save the retrained \
+      st.write("Click the button below to retrain" + messagePart2 + "model using" + messagePart1 + \
+               "the full dataset (the union of the training and test sets) and save the retrained \
                 model.")
     
       if ts == 1:
@@ -1103,7 +1137,7 @@ if toSave:
    
       filename += ".joblib"
 
-      if st.button(label = "Retrain and save" + messagePart + "model", on_click = setStage, args = [18]):
+      if st.button(label = "Retrain and save" + messagePart2 + "model", on_click = setStage, args = [18]):
                  
          model.fit(x, y)
          dump(model, filename) 
@@ -1114,17 +1148,17 @@ if toSave:
    else:
       
       if n == ts and tf == 0:
-         messagePart = " "
+         messagePart2 = " "
       elif n == ts and tf > 0:
-           messagePart = " successfully trained "
+           messagePart2 = " successfully trained "
       else:
-         messagePart = " best " 
+         messagePart2 = " best " 
        
-      st.write("Click the button below to retrain the" + messagePart + "models using the full \
-                dataset (the union of the training and test sets) and save the retrained \
+      st.write("Click the button below to retrain the" + messagePart2 + "models using" + messagePart1 + \
+               "the full dataset (the union of the training and test sets) and save the retrained \
                 models.")
    
-      if st.button(label = "Retrain and save the" + messagePart + "models", on_click = setStage, args = [18]):
+      if st.button(label = "Retrain and save the" + messagePart2 + "models", on_click = setStage, args = [18]):
        
          for i in range(n):
           
