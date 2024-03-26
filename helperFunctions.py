@@ -1,7 +1,7 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: March 21, 2024
+Date Modified: March 24, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -14,18 +14,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 
-# if "selectBalancingMethod" not in st.session_state:
-#    st.session_state.selectBalancingMethod = False
-   
-# if "runBalancingMethod" not in st.session_state:
-#    st.session_state.runBalancingMethod = False
-
 model1 = "Decision Tree Classifier"
-model2 = "Gaussian Process Classifier"
-model3 = "k-Nearest Neighbors Classifier"
-model4 = "Logistic Regression"
-model5 = "Random Forest Classifier"
-model6 = "Support Vector Classifier"
+model2 = "Gaussian Naive Bayes Classifier"
+model3 = "Gaussian Process Classifier"
+model4 = "k-Nearest Neighbors Classifier"
+model5 = "Logistic Regression"
+model6 = "Multi-layer Perceptron Classifier"
+model7 = "Quadratic Discriminant Analysis"
+model8 = "Random Forest Classifier"
+model9 = "Support Vector Classifier"
 
 def actOnClassImbalance(classDistribution, nUniqueValues, trainSet, features, targetVariable, currentStage,
                         nextStage):
@@ -62,8 +59,6 @@ def actOnClassImbalance(classDistribution, nUniqueValues, trainSet, features, ta
              st.button(label = "Run balancing method", 
                        on_click = runBalancingMethod,
                        args = [balancingMethod, currentStage])
-       
-       toContinueBalancing = False
        
        if st.session_state.runBalancingMethod:
        
@@ -102,28 +97,23 @@ def actOnClassImbalance(classDistribution, nUniqueValues, trainSet, features, ta
              displayDataset(dataset = trainSet, header = "**Balanced Training Set**")
              classDistribution = displayClassDistribution(datasetHolder = trainSet, 
                                                           targetVariable = targetVariable, 
-                                                          nUniqueValues = nUniqueValues)
+                                                          nUniqueValues = nUniqueValues,
+                                                          titlePart = " Balanced ")
                
              st.button(label = "Next", key = "balancingMethodNext", on_click = setStage, args = [nextStage])
-             toContinueBalancing = True
           
           except:
               
              st.markdown(":red[The selected balancing method did not run successfully. Please select a different \
                          balancing method.]") 
-             
-       if toContinueBalancing:       
                      
-          if balancing == bOption1:
-              
-             method = st.session_state.method
-             output = (trainSet, method)
-              
-          else:
-             output = trainSet
-             
+       if balancing == bOption1:
+            
+          method = st.session_state.method
+          output = (trainSet, method)
+            
        else:
-          output = False
+          output = trainSet
        
     else:
         
@@ -137,7 +127,8 @@ def binarizeTarget(dataset, classes, targetVariable, variableType, currentStage,
     
     if variableType == "categorical":
        
-       positiveClasses = st.multiselect(label = "Select the classes that will be map to 1.",
+       label = "`" + targetVariable + "` has " + str(len(classes)) + " classes. Select the classes that will be map to 1."
+       positiveClasses = st.multiselect(label = label,
                                         options = classes,
                                         default = None, 
                                         key = positiveClassesKey,
@@ -232,7 +223,7 @@ def confirmTargetVariable(targetVariable = None):
         
     st.session_state.toCategorical = True
 
-def displayClassDistribution(datasetHolder, targetVariable, nUniqueValues):
+def displayClassDistribution(datasetHolder, targetVariable, nUniqueValues, titlePart = " "):
     '''Display the class distribution of the target variable in the training set.'''
     
     st.write(" ")
@@ -251,7 +242,7 @@ def displayClassDistribution(datasetHolder, targetVariable, nUniqueValues):
     
     plt.rcParams["axes.linewidth"] = 0.2
     fig.set_size_inches(5, 1.3)
-    title = "Class Distribution of " + namePart + targetVariable + " in the Training Set"
+    title = "Class Distribution of " + namePart + targetVariable + " in the" + titlePart + "Training Set"
     ax.set_title(title, fontsize = 5.5)
     ax.set_xlim(0, 1)
     ax.xaxis.set_tick_params(length = 1.5, width = 0.3, labelsize = 4.5)
@@ -402,7 +393,10 @@ def setAllOptions():
                 st.session_state[model3] and \
                 st.session_state[model4] and \
                 st.session_state[model5] and \
-                st.session_state[model6]     
+                st.session_state[model6] and \
+                st.session_state[model7] and \
+                st.session_state[model8] and \
+                st.session_state[model9]    
 
     if condition:
        st.session_state.allOptions = True
@@ -422,6 +416,9 @@ def setOptions():
        st.session_state[model4] = True
        st.session_state[model5] = True
        st.session_state[model6] = True
+       st.session_state[model7] = True
+       st.session_state[model8] = True
+       st.session_state[model9] = True
        
     else:
          
@@ -431,6 +428,9 @@ def setOptions():
        st.session_state[model4] = False
        st.session_state[model5] = False
        st.session_state[model6] = False
+       st.session_state[model7] = False
+       st.session_state[model8] = False
+       st.session_state[model9] = False
        
     setStage(11)
     

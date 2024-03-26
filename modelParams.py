@@ -1,7 +1,7 @@
 """
          File: modelParams.py
  Date Created: February 22, 2024
-Date Modified: March 19, 2024
+Date Modified: March 25, 2024
 ---------------------------------------------------------
 This script is imported by scikit-learnClassification.py.
 ---------------------------------------------------------
@@ -257,6 +257,66 @@ def setDTCParams():
                disabledMinWeightFractionLeaf + disabledMaxFeatures + disabledMaxLeafNodes + \
                disabledMinImpurityDecrease + disabledCcpAlpha
         
+    return params, disabled
+
+def setGNBCParams():
+    '''Set the Gaussian Naive Bayes classifier parameters.'''
+    
+    #-------
+    # priors
+    #-------
+    
+    priors = st.selectbox(label = "priors",
+                          options = ["None", "Specify"],
+                          index = 0,
+                          key = "gnbc_priors",
+                          on_change = setStage,
+                          args = [13])
+    
+    if priors == "None":
+       priorsValue = None
+    else:
+    
+       cols = st.columns(2)
+   
+       with cols[0]:
+            classOnePrior = st.slider(label = "prior probability of class 1", 
+                                      min_value = 0.0, 
+                                      max_value = 1.0, 
+                                      value = 0.5,
+                                      on_change = setStage,
+                                      args = [13])
+         
+       classZeroPrior = 1 - classOnePrior
+ 
+       st.write("class 1 prior probability = %.2f" % classOnePrior)
+       st.write("class 0 prior probability = %.2f" % classZeroPrior)
+       
+       priorsValue = [classZeroPrior, classOnePrior]
+    
+    #--------------
+    # var_smoothing
+    #--------------
+    
+    varSmoothing = st.number_input(label = "var_smoothing",
+                                   value = 1e-9,
+                                   step = 1e-10,
+                                   format = "%.10f",
+                                   on_change = setStage,
+                                   args = [13])
+    disabledVarSmoothing = False
+    
+    if varSmoothing < 0:
+        
+       st.markdown(":red[For `var_smoothing`, please input a float greater than or equal to 0.]")
+       disabledVarSmoothing = True
+    
+    params = {}
+    params["priors"] = priorsValue
+    params["var_smoothing"] = varSmoothing
+    
+    disabled = disabledVarSmoothing
+    
     return params, disabled
     
 def setGPCParams():
@@ -678,6 +738,7 @@ def setLRParams():
                           value = 1e-4,
                           step = 1e-5,
                           format = "%.5f",
+                          key = "lr_tol",
                           on_change = setStage,
                           args = [13])
     disabledTol = False
@@ -854,8 +915,536 @@ def setLRParams():
     
     if penalty == "elasticnet":
        
-       disabled += disabledL1Ratio
        params["l1_ratio"] = l1Ratio
+       disabled += disabledL1Ratio
+    
+    return params, disabled
+
+def setMLPCParams():
+    '''Set the multi-layer perceptron classifier parameters.'''
+    
+    #-------------------
+    # hidden_layer_sizes
+    #-------------------
+        
+    nHiddenLayers = st.number_input(label = "number of hidden layers",
+                                    value = 1.0,
+                                    step = 1.0,
+                                    format = "%f",
+                                    on_change = setStage,
+                                    args = [13])
+    disabledNHiddenLayers = False
+    
+    nHiddenLayersDelta = nHiddenLayers - math.floor(nHiddenLayers)
+     
+    if nHiddenLayers <= 0 or (nHiddenLayers > 0 and nHiddenLayersDelta > 0):
+         
+       st.markdown(":red[For the number of hidden layers, please input an integer greater than or equal to 1.]")
+       disabledNHiddenLayers = True
+       
+    else:
+       nHiddenLayers = int(nHiddenLayers)
+       
+    nNeurons = {}
+    disabledNNeurons = {}
+    nNeuronsDelta = {}
+    hiddenLayerSizes = []
+    for i in range(1, nHiddenLayers + 1):
+        
+        nNeurons[i] = st.number_input(label = "number of neurons in hidden layer " + str(i),
+                                      value = 100.0,
+                                      step = 1.0,
+                                      format = "%f",
+                                      on_change = setStage,
+                                      args = [13])
+        disabledNNeurons[i] = False
+        
+        nNeuronsDelta[i] = nNeurons[i] - math.floor(nNeurons[i])
+        
+        if nNeurons[i] <= 0 or (nNeurons[i] > 0 and nNeuronsDelta[i] > 0):
+             
+           st.markdown(":red[For the number of neurons in hidden layer " + str(i) + ", please input an \
+                       integer greater than or equal to 1.]")
+           disabledNNeurons[i] = True
+           
+        else:
+            
+           nNeurons[i] = int(nNeurons[i])
+           hiddenLayerSizes.append(nNeurons[i])
+           
+    #-----------
+    # activation
+    #-----------
+    
+    activation = st.selectbox(label = "activation",
+                              options = ["identity", "logistic", "tanh", "relu"],
+                              index = 3,
+                              on_change = setStage,
+                              args = [13])
+    
+    #-------
+    # solver
+    #-------
+    
+    solver = st.selectbox(label = "solver",
+                          options = ["lbfgs", "sgd", "adam"],
+                          index = 2,
+                          on_change = setStage,
+                          args = [13])
+    
+    #------
+    # alpha
+    #------
+    
+    alpha = st.number_input(label = "alpha",
+                            value = 1e-4,
+                            step = 1e-5,
+                            format = "%.5f",
+                            on_change = setStage,
+                            args = [13])
+    disabledAlpha = False
+    
+    if alpha < 0:
+         
+       st.markdown(":red[For `alpha`, please input a float greater than or equal 0.]")
+       disabledAlpha = True
+       
+    #-----------
+    # batch_size
+    #-----------
+    
+    batchSize = st.selectbox(label = "batch_size",
+                             options = ["int", "auto"],
+                             index = 1,
+                             on_change = setStage,
+                             args = [13])
+    disabledBatchSize = False
+    
+    if batchSize == "int":
+        
+       batchSize = st.number_input(label = "Input an int for batch_size",
+                                   value = None,
+                                   step = 1.0,
+                                   format = "%f",
+                                   key = "batch_size",
+                                   on_change = setStage,
+                                   args = [13])
+       
+       if batchSize is not None:
+           
+          batchSizeDelta = batchSize - math.floor(batchSize)
+            
+          if batchSize <= 0 or (batchSize > 0 and batchSizeDelta > 0):
+                
+             st.markdown(":red[For `batch_size`, please input an integer greater than or equal to 1.]")
+             disabledBatchSize = True
+              
+          else:
+             batchSize = int(batchSize)
+             
+    #--------------
+    # learning_rate
+    #--------------
+    
+    if solver == "sgd":
+       learningRate = st.selectbox(label = "learning_rate",
+                                   options = ["constant", "invscaling", "adaptive"],
+                                   index = 0,
+                                   on_change = setStage,
+                                   args = [13])
+    
+    #-------------------
+    # learning_rate_init
+    #-------------------
+    
+    if solver in ["sgd", "adam"]:
+        
+       learningRateInit = st.number_input(label = "learning_rate_init",
+                                          value = 1e-3,
+                                          step = 1e-4,
+                                          format = "%.4f",
+                                          on_change = setStage,
+                                          args = [13])
+       disabledLearningRateInit = False
+       
+       if learningRateInit <= 0:
+            
+          st.markdown(":red[For `learning_rate_init`, please input a float greater than 0.]")
+          disabledLearningRateInit = True
+          
+    #--------
+    # power_t
+    #--------
+    
+    if solver == "sgd":
+        
+       powerT = st.number_input(label = "power_t",
+                                value = 0.5,
+                                step = 0.01,
+                                format = "%.2f",
+                                on_change = setStage,
+                                args = [13])
+       disabledPowerT = False
+       
+       if powerT < 0:
+            
+          st.markdown(":red[For `power_t`, please input a float greater than or equal to 0.]")
+          disabledPowerT = True
+          
+    #---------
+    # max_iter
+    #---------
+    
+    maxIter = st.number_input(label = "max_iter",
+                              value = 200.0,
+                              step = 1.0,
+                              format = "%f",
+                              on_change = setStage,
+                              args = [13])
+    disabledMaxIter = False
+    
+    maxIterDelta = maxIter - math.floor(maxIter)
+     
+    if maxIter <= 0 or (maxIter > 0 and maxIterDelta > 0):
+         
+       st.markdown(":red[For `max_iter`, please input an integer greater than or equal to 1.]")
+       disabledMaxIter = True
+       
+    else:
+       maxIter = int(maxIter)
+       
+    #--------
+    # shuffle
+    #--------
+
+    if solver in ["sgd", "adam"]:
+       shuffle = st.selectbox(label = "shuffle",
+                              options = [True, False],
+                              index = 0,
+                              on_change = setStage,
+                              args = [13]) 
+       
+    #----
+    # tol
+    #----
+    
+    tol = st.number_input(label = "tol",
+                          value = 1e-4,
+                          step = 1e-5,
+                          format = "%.5f",
+                          key = "mlpc_tol",
+                          on_change = setStage,
+                          args = [13])
+    disabledTol = False
+    
+    if tol < 0:
+         
+        st.markdown(":red[For `tol`, please input a float greater than or equal 0.]")
+        disabledTol = True
+        
+    #---------
+    # momentum
+    #---------
+    
+    if solver == "sgd":
+        
+       momentum = st.number_input(label = "momentum",
+                                  value = 0.9,
+                                  step = 0.01,
+                                  format = "%.2f",
+                                  on_change = setStage,
+                                  args = [13])
+       disabledMomentum = False
+       
+       if momentum < 0 or momentum > 1:
+           
+          st.markdown(":red[For `momentum`, please input a float between 0 and 1 inclusive.]")
+          disabledMomentum = True
+          
+    #-------------------
+    # nesterovs_momentum
+    #-------------------
+
+    if solver == "sgd" and momentum > 0 and momentum <= 1:
+        nesterovsMomentum = st.selectbox(label = "nesterovs_momentum",
+                                        options = [True, False],
+                                        index = 0,
+                                        on_change = setStage,
+                                        args = [13]) 
+        
+    #---------------
+    # early_stopping
+    #---------------
+
+    earlyStopping = st.selectbox(label = "early_stopping",
+                                 options = [True, False],
+                                 index = 1,
+                                 on_change = setStage,
+                                 args = [13])  
+    
+    #--------------------
+    # validation_fraction
+    #--------------------
+    
+    if earlyStopping:
+        
+       validationFraction = st.number_input(label = "validation_fraction",
+                                            value = 0.1,
+                                            step = 0.01,
+                                            format = "%.2f",
+                                            on_change = setStage,
+                                            args = [13])
+       disabledValidationFraction = False
+       
+       if validationFraction <= 0 or validationFraction >= 1:
+           
+          st.markdown(":red[For `validation_fraction`, please input a float strictly between 0 and 1.]")
+          disabledValidationFraction = True
+    
+    #-------
+    # beta_1
+    #-------    
+    
+    if solver == "adam":
+        
+       beta1 = st.number_input(label = "beta_1",
+                               value = 0.9,
+                               step = 0.01,
+                               format = "%.2f",
+                               on_change = setStage,
+                               args = [13])
+       disabledBeta1 = False
+       
+       if beta1 < 0 or beta1 >= 1:
+           
+          st.markdown(":red[For `beta_1`, please input a float between 0 and 1 including 0 \
+                      but excluding 1.]")
+          disabledBeta1 = True
+          
+    #-------
+    # beta_2
+    #-------          
+          
+       beta2 = st.number_input(label = "beta_2",
+                               value = 0.999,
+                               step = 0.0001,
+                               format = "%.4f",
+                               on_change = setStage,
+                               args = [13])
+       disabledBeta2 = False
+       
+       if beta2 < 0 or beta2 >= 1:
+           
+          st.markdown(":red[For `beta_2`, please input a float between 0 and 1 including 0 \
+                      but excluding 1.]")
+          disabledBeta2 = True
+          
+    #--------
+    # epsilon
+    #--------
+       
+       epsilon = st.number_input(label = "epsilon",
+                                 value = 1e-8,
+                                 step = 1e-9,
+                                 format = "%.9f",
+                                 on_change = setStage,
+                                 args = [13])
+       disabledEpsilon = False
+       
+       if epsilon <= 0:
+           
+          st.markdown(":red[For `epsilon`, please input a float greater than 0.]")
+          disabledEpsilon = True
+       
+    #-----------------
+    # n_iter_no_change
+    #----------------- 
+      
+    nIterNoChange = st.number_input(label = "n_iter_no_change",
+                                    value = 10.0,
+                                    step = 1.0,
+                                    format = "%f",
+                                    on_change = setStage,
+                                    args = [13])
+    disabledNIterNoChange = False
+    
+    nIterNoChangeDelta = nIterNoChange - math.floor(nIterNoChange)
+     
+    if nIterNoChange <= 0 or (nIterNoChange > 0 and nIterNoChangeDelta > 0):
+         
+       st.markdown(":red[For `n_iter_no_change`, please input an integer greater than or equal to 1.]")
+       disabledNIterNoChange = True
+       
+    else:
+       nIterNoChange = int(nIterNoChange)
+       
+    #--------
+    # max_fun
+    #--------
+    
+    if solver == "lbfgs":
+        
+       maxFun = st.number_input(label = "max_fun",
+                                value = 15000.0,
+                                step = 1.0,
+                                format = "%f",
+                                on_change = setStage,
+                                args = [13])
+       disabledMaxFun = False
+       
+       maxFunDelta = maxFun - math.floor(maxFun)
+        
+       if maxFun <= 0 or (maxFun > 0 and maxFunDelta > 0):
+            
+          st.markdown(":red[For `max_fun`, please input an integer greater than or equal to 1.]")
+          disabledMaxFun = True
+          
+       else:
+          maxFun = int(maxFun)
+        
+    params = {}
+    params["hidden_layer_sizes"] = hiddenLayerSizes
+    params["activation"] = activation
+    params["solver"] = solver
+    params["alpha"] = alpha
+    params["batch_size"] = batchSize
+    params["max_iter"] = maxIter
+    
+    params["tol"] = tol
+    params["early_stopping"] = earlyStopping
+    params["n_iter_no_change"] = nIterNoChange
+      
+    disabled = disabledNHiddenLayers
+    for i in range(1, nHiddenLayers + 1):
+        disabled += disabledNNeurons[i] 
+        
+    disabled += disabledAlpha + disabledBatchSize + disabledMaxIter + disabledTol + disabledNIterNoChange
+    
+    if solver == "sgd":
+        
+       params["learning_rate"] = learningRate
+       params["power_t"] = powerT
+       params["momentum"] = momentum
+       
+       disabled += disabledPowerT + disabledMomentum
+       
+       if momentum > 0 and momentum <= 1:
+          params["nesterovs_momentum"] = nesterovsMomentum
+    
+    if solver in ["sgd", "adam"]:
+        
+       params["learning_rate_init"] = learningRateInit
+       params["shuffle"] = shuffle
+       
+       disabled += disabledLearningRateInit
+       
+    if earlyStopping:
+        
+       params["validation_fraction"] = validationFraction
+       disabled += disabledValidationFraction
+       
+    if solver == "adam":
+       
+       params["beta_1"] = beta1
+       params["beta_2"] = beta2
+       params["epsilon"] = epsilon
+       
+       disabled += disabledBeta1 + disabledBeta2 + disabledEpsilon
+       
+    if solver == "lbfgs":
+        
+       params["max_fun"] = maxFun
+       disabled += disabledMaxFun
+    
+    return params, disabled
+
+def setQDAParams():
+    '''Set the quadratic discriminant analysis parameters.'''
+    
+    #-------
+    # priors
+    #-------
+    
+    priors = st.selectbox(label = "priors",
+                          options = ["None", "Specify"],
+                          index = 0,
+                          key = "qda_priors",
+                          on_change = setStage,
+                          args = [13])
+    
+    if priors == "None":
+       priorsValue = None
+    else:
+    
+       cols = st.columns(2)
+   
+       with cols[0]:
+            classOnePrior = st.slider(label = "prior probability of class 1", 
+                                      min_value = 0.0, 
+                                      max_value = 1.0, 
+                                      value = 0.5,
+                                      on_change = setStage,
+                                      args = [13])
+         
+       classZeroPrior = 1 - classOnePrior
+ 
+       st.write("class 1 prior probability = %.2f" % classOnePrior)
+       st.write("class 0 prior probability = %.2f" % classZeroPrior)
+       
+       priorsValue = [classZeroPrior, classOnePrior]
+    
+    #----------
+    # reg_param
+    #----------
+    
+    regParam = st.number_input(label = "reg_param",
+                               value = 0.0,
+                               step = 0.1,
+                               format = "%.1f",
+                               on_change = setStage,
+                               args = [13])
+    disabledRegParam = False
+    
+    if regParam < 0 or regParam > 1:
+        
+       st.markdown(":red[For `reg_param`, please input a float between 0 and 1 inclusive.]")
+       disabledRegParam = True
+       
+    #-----------------
+    # store_covariance
+    #-----------------
+    
+    storeCovariance = st.selectbox(label = "store_covariance",
+                                   options = [True, False],
+                                   index = 1,
+                                   on_change = setStage,
+                                   args = [13])
+    
+    #----
+    # tol
+    #----
+    
+    tol = st.number_input(label = "tol",
+                          value = 1e-4,
+                          step = 1e-5,
+                          format = "%.5f",
+                          key = "qda_tol",
+                          on_change = setStage,
+                          args = [13])
+    disabledTol = False
+    
+    if tol < 0:
+         
+        st.markdown(":red[For `tol`, please input a float greater than or equal 0.]")
+        disabledTol = True
+    
+    params = {}
+    params["priors"] = priorsValue
+    params["reg_param"] = regParam
+    params["store_covariance"] = storeCovariance
+    params["tol"] = tol
+    
+    disabled = disabledTol + disabledRegParam
     
     return params, disabled
 
@@ -1289,6 +1878,7 @@ def setSVCParams():
                           value = 1e-3,
                           step = 1e-4,
                           format = "%.4f",
+                          key = "svc_tol",
                           on_change = setStage,
                           args = [13])
     disabledTol = False
@@ -1400,12 +1990,18 @@ def setModelParams(modelName):
     
     if modelName == "Decision Tree Classifier":
        params, disabled = setDTCParams() 
+    elif modelName == "Gaussian Naive Bayes Classifier":
+         params, disabled = setGNBCParams()
     elif modelName == "Gaussian Process Classifier":
          params, disabled = setGPCParams()
     elif modelName == "k-Nearest Neighbors Classifier":
          params, disabled = setkNNCParams()
     elif modelName == "Logistic Regression":
-       params, disabled = setLRParams()
+         params, disabled = setLRParams()
+    elif modelName == "Multi-layer Perceptron Classifier":
+         params, disabled = setMLPCParams()
+    elif modelName == "Quadratic Discriminant Analysis":
+         params, disabled = setQDAParams()
     elif modelName == "Random Forest Classifier":
          params, disabled = setRFCParams()
     elif modelName == "Support Vector Classifier":

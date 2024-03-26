@@ -1,7 +1,7 @@
 """
          File: sci-kit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: March 22, 2024
+Date Modified: March 24, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn."
@@ -11,24 +11,28 @@ selection of algorithms that are implemented in scikit-learn."
 from helperFunctions import actOnClassImbalance, binarizeTarget, changeTargetVariable, \
                             confirmTargetVariable, displayClassDistribution, displayDataset, \
                             printTrainingResults, setAllOptions, setOptions, setStage
-from joblib import dump
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import load_breast_cancer, load_diabetes, load_digits, load_iris, load_wine
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import RocCurveDisplay
 from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
+import joblib
 import matplotlib.pyplot as plt
 import modelParams
 import numpy as np
 import os
 import pandas as pd
+import pickle
 import scipy
 import streamlit as st
 
@@ -88,16 +92,22 @@ if "trainingSucceeded" not in st.session_state:
    
 if "trainingFailed" not in st.session_state:   
    st.session_state.trainingFailed = []  
+   
+if "retrainedModels" not in st.session_state:
+   st.session_state.retrainedModels = {}
 
 nUniqueValues = st.session_state.nUniqueValues
 toSplit = False
-toSave = False   
+toRetrain = False   
       
 if st.session_state.stage == 0 or st.session_state.stage == 1:
     
    st.markdown("This web app will walk you through the steps in training and testing one or more \
                 binary classifiers using a selection of algorithms that are implemented in \
-                `scikit-learn`.")
+                `scikit-learn`.")  
+   st.write(" ")             
+   st.image(image = "classifiers.jpg")    
+   st.write(" ")         
    st.markdown("Click the button below to begin.")
    st.button(label = 'Begin', on_click = setStage, args = [1])
    
@@ -139,15 +149,23 @@ if st.session_state.stage >= 2:
    case3 = st.session_state.case3
    datasetAvailability = st.session_state.datasetAvailability
    
+   @st.cache_data
+   def readCsv(uploadedDataset):
+       
+       dataset = pd.read_csv(uploadedDataset)
+       
+       return dataset
+       
    if datasetAvailability == case1:
       
       uploadedDataset = st.sidebar.file_uploader(label = "Upload the dataset in `csv` file format.",
+                                                 type = "csv",
                                                  on_change = setStage, 
                                                  args = [3])
  
       if uploadedDataset is not None:
   
-         dataset = pd.read_csv(uploadedDataset)
+         dataset = readCsv(uploadedDataset = uploadedDataset)
          variables = dataset.columns.tolist()
          datasetHolder = dataset
          
@@ -162,7 +180,7 @@ if st.session_state.stage >= 2:
    
         if uploadedTrainSet is not None:
     
-           trainSet = pd.read_csv(uploadedTrainSet)
+           trainSet = readCsv(uploadedDataset = uploadedTrainSet)
            variables = trainSet.columns.tolist()
            datasetHolder = trainSet
            
@@ -371,7 +389,7 @@ if (st.session_state.stage >= 6 or (st.session_state.confirmTargetVariable and n
       
 if st.session_state.stage >= 7 or (st.session_state.toCategorical and nUniqueValues == 2 and \
                                    datasetAvailability == case1):         
-
+    
    if datasetAvailability in [case1, case2]:
        
       st.write(" ") 
@@ -612,11 +630,14 @@ if st.session_state.stage >= 11:
       yTrain = trainSet[targetVariable].to_numpy()
    
    model1 = "Decision Tree Classifier"
-   model2 = "Gaussian Process Classifier"
-   model3 = "k-Nearest Neighbors Classifier"
-   model4 = "Logistic Regression"
-   model5 = "Random Forest Classifier"
-   model6 = "Support Vector Classifier"
+   model2 = "Gaussian Naive Bayes Classifier"
+   model3 = "Gaussian Process Classifier"
+   model4 = "k-Nearest Neighbors Classifier"
+   model5 = "Logistic Regression"
+   model6 = "Multi-layer Perceptron Classifier"
+   model7 = "Quadratic Discriminant Analysis"
+   model8 = "Random Forest Classifier"
+   model9 = "Support Vector Classifier"
    
    st.checkbox(label = model1, key = model1, on_change = setAllOptions)
    st.checkbox(label = model2, key = model2, on_change = setAllOptions)
@@ -624,9 +645,12 @@ if st.session_state.stage >= 11:
    st.checkbox(label = model4, key = model4, on_change = setAllOptions)
    st.checkbox(label = model5, key = model5, on_change = setAllOptions)
    st.checkbox(label = model6, key = model6, on_change = setAllOptions)
+   st.checkbox(label = model7, key = model7, on_change = setAllOptions)
+   st.checkbox(label = model8, key = model8, on_change = setAllOptions)
+   st.checkbox(label = model9, key = model9, on_change = setAllOptions)
    st.checkbox("Select all models", key = 'allOptions', on_change = setOptions)
    
-   options = [model1, model2, model3, model4, model5, model6]
+   options = [model1, model2, model3, model4, model5, model6, model7, model8, model9]
    selected = 0
    for option in options:
        selected += st.session_state[option]
@@ -727,7 +751,9 @@ if st.session_state.stage >= 13:
          messagePart3 = "in one of the tabs above"
       elif disabled > 1:
            messagePart3 = "in one or more of the tabs above"
-     
+   
+   st.write(" ")
+        
    if disabled == 0:     
       st.write("Click the `Reset model parameters` button to set the model parameters again or click the \
                 `Confirm` button to confirm the assigned values of the model parameters.")
@@ -761,7 +787,7 @@ if st.session_state.stage >= 14:
    st.write("Click the button below to train the selected " + messagePart + ".")
 
    if st.button(label = "Train " + messagePart, on_click = setStage, args = [15]): 
-      
+            
       trainingSucceeded = []
       trainingFailed = []
       for option in trueOptions:
@@ -769,14 +795,20 @@ if st.session_state.stage >= 14:
           if option == model1:
              model = DecisionTreeClassifier(random_state = 1, **paramsValues[option])
           elif option == model2:
+               model = GaussianNB(**paramsValues[option])
+          elif option == model3:
                model = GaussianProcessClassifier(random_state = 1, **paramsValues[option])
-          elif option == model3:  
+          elif option == model4:  
                model = KNeighborsClassifier(**paramsValues[option])  
-          elif option == model4:
-               model = LogisticRegression(random_state = 1, **paramsValues[option])
           elif option == model5:
-               model = RandomForestClassifier(random_state = 1, **paramsValues[option])
+               model = LogisticRegression(random_state = 1, **paramsValues[option])
           elif option == model6:
+               model = MLPClassifier(random_state = 1, **paramsValues[option])
+          elif option == model7:
+               model = QuadraticDiscriminantAnalysis(**paramsValues[option])
+          elif option == model8:
+               model = RandomForestClassifier(random_state = 1, **paramsValues[option])
+          elif option == model9:
                model = SVC(random_state = 1, **paramsValues[option])
           
           try:
@@ -790,7 +822,7 @@ if st.session_state.stage >= 14:
       
       st.session_state.trainingSucceeded = trainingSucceeded
       st.session_state.trainingFailed = trainingFailed
-             
+                   
 #--------------------------------
 # Display or upload the test set.
 #--------------------------------  
@@ -980,9 +1012,13 @@ if st.session_state.stage >= 17:
          figsize = (10, 5)
       elif nRows == 2:
            figsize = (9, 9)
-      else:
+      elif nRows == 3:
            figsize = (9, 14)
-       
+      elif nRows == 4:
+           figsize = (9, 19)
+      else:
+           figsize = (9, 24)
+      
       fig, axes = plt.subplots(nRows, 2, sharey = True, figsize = figsize)
       plt.rc('legend', fontsize = 9)
        
@@ -1061,13 +1097,13 @@ if st.session_state.stage >= 17:
       elif n == ts:
            st.write("The" + messagePart + "models have the same ROC AUC score on the test set.")
     
-   toSave = True            
+   toRetrain = True            
        
-#-------------------
-# Save the model(s).
-#-------------------
+#---------------------------
+# Retrain the best model(s).
+#---------------------------
 
-if toSave:
+if toRetrain:
    
    st.write(" ")
    st.write(" ") 
@@ -1108,6 +1144,8 @@ if toSave:
       y = datasetRetrain["binarized " + targetVariable].to_numpy()
    else:
       y = datasetRetrain[targetVariable].to_numpy()
+      
+   retrainedModels = {}
    
    if ts == 1 or n == 1:
        
@@ -1119,8 +1157,7 @@ if toSave:
            messagePart2 = " "
       
       st.write("Click the button below to retrain" + messagePart2 + "model using" + messagePart1 + \
-               "the full dataset (the union of the training and test sets) and save the retrained \
-                model.")
+               "the full dataset (the union of the training and test sets).")
     
       if ts == 1:
          modelName = trainingSucceeded[0]
@@ -1134,16 +1171,12 @@ if toSave:
    
       for i in range(1, len(modelNameParts)):
           filename += modelNameParts[i]
-   
-      filename += ".joblib"
-
-      if st.button(label = "Retrain and save" + messagePart2 + "model", on_click = setStage, args = [18]):
-                 
+      
+      if st.button(label = "Retrain" + messagePart2 + "model", on_click = setStage, args = [18]):
+         
          model.fit(x, y)
-         dump(model, filename) 
-         st.write("Model saved as a joblib file in " + os.getcwd() + ". Click the `Start Over` or \
-                   `Reset` buttons to go back to the intro page or close the browser's tab displaying \
-                   this web app to exit.")
+         retrainedModels[filename] = model
+         st.session_state.retraindedModels = retrainedModels
          
    else:
       
@@ -1155,10 +1188,9 @@ if toSave:
          messagePart2 = " best " 
        
       st.write("Click the button below to retrain the" + messagePart2 + "models using" + messagePart1 + \
-               "the full dataset (the union of the training and test sets) and save the retrained \
-                models.")
+               "the full dataset (the union of the training and test sets).")
    
-      if st.button(label = "Retrain and save the" + messagePart2 + "models", on_click = setStage, args = [18]):
+      if st.button(label = "Retrain the" + messagePart2 + "models", on_click = setStage, args = [18]):
        
          for i in range(n):
           
@@ -1170,19 +1202,63 @@ if toSave:
        
              for j in range(1, len(modelNameParts)):
                  filename += modelNameParts[j]
-       
-             filename += ".joblib"
           
              model.fit(x, y)
-             dump(model, filename) 
+             retrainedModels[filename] = model
              
-         st.write("Models saved as joblib files in " + os.getcwd() + ". Click the `Start Over` or \
-                   `Reset` buttons to go back to the intro page or close the browser's tab displaying \
-                   this web app to exit.")
+         st.session_state.retraindedModels = retrainedModels
+                 
+#-----------------------------
+# Save the retrained model(s).
+#-----------------------------
+
+if st.session_state.stage >= 18:
+    
+   st.write("Retraining completed.")     
+    
+   retrainedModels = st.session_state.retraindedModels
+   filenames = list(retrainedModels.keys())
+   
+   st.write(" ")
+   
+   if len(filenames) == 1:
+      messagePart = "model"
+   else:
+      messagePart = "models"
+
+   fileFormat = st.radio(label = "Please select the file format to be used in saving the " + messagePart + ".", 
+                         options = ["joblib", "pickle"], 
+                         index = None,
+                         on_change = setStage,
+                         args = [18])
+   
+   if fileFormat is not None:
+        
+      if st.button(label = "Save the retrained " + messagePart, on_click = setStage, args = [19]):
+     
+         for filename in filenames:
           
+             model = retrainedModels[filename]
+          
+             if fileFormat == "joblib":
+                joblib.dump(model, filename + ".joblib") 
+             else:
+                pickle.dump(model, open(filename + ".pkl", "wb"))
+          
+         if len(filenames) == 1:
+            messagePart = "Model saved as a " + fileFormat + " file in " 
+         else:
+            messagePart = "Models saved as " + fileFormat + " files in " 
+          
+         st.write(messagePart + os.getcwd() + ". Click the `Start Over` or `Reset` buttons to go back to the intro page \
+                  or close the browser's tab displaying this web app to exit.")
+              
+   else:
+      setStage(18)  
+ 
 #-----------
 # Start over
 #-----------
 
-if st.session_state.stage >= 18:
+if st.session_state.stage >= 19:
    st.sidebar.button(label = 'Start Over', on_click = setStage, args = [0])
