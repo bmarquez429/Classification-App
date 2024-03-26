@@ -1,3 +1,4 @@
 # Classification App
 
-This repo stores Python scripts for an app that takes the user through the steps to train and test classification models in [scikit-learn](https://scikit-learn.org/stable/).
+This repo stores Python scripts for an app that walks the user through the steps in training and testing one or more binary classifiers using a 
+selection of algorithms that are implemented in [scikit-learn](https://scikit-learn.org/stable/).
