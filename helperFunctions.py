@@ -1,7 +1,7 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: March 24, 2024
+Date Modified: April 2, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -403,7 +403,7 @@ def setAllOptions():
     else:
        st.session_state.allOptions = False
        
-    setStage(11)
+    setStage(12)
 
 def setOptions():
     '''Change the values of the model keys.'''
@@ -432,7 +432,7 @@ def setOptions():
        st.session_state[model8] = False
        st.session_state[model9] = False
        
-    setStage(11)
+    setStage(12)
     
 def setStage(i):
     '''Change the value of the stage key and perform certain actions according

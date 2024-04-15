@@ -1,7 +1,7 @@
 """
          File: modelParams.py
  Date Created: February 22, 2024
-Date Modified: March 25, 2024
+Date Modified: April 2, 2024
 ---------------------------------------------------------
 This script is imported by scikit-learnClassification.py.
 ---------------------------------------------------------
@@ -24,7 +24,7 @@ def setDTCParams():
                              index = 0,
                              key = "dtc_criterion",
                              on_change = setStage,
-                             args = [13])
+                             args = [14])
     
     #---------
     # splitter
@@ -34,7 +34,7 @@ def setDTCParams():
                             options = ["best", "random"],
                             index = 0,
                             on_change = setStage,
-                            args = [13])
+                            args = [14])
     
     #----------
     # max_depth
@@ -46,7 +46,7 @@ def setDTCParams():
                                format = "%f",
                                key = "dtc_max_depth", 
                                on_change = setStage,
-                               args = [13],
+                               args = [14],
                                placeholder = "None")
     disabledMaxDepth = False
     
@@ -73,7 +73,7 @@ def setDTCParams():
                                       format = "%f",
                                       key = "dtc_min_samples_split", 
                                       on_change = setStage,
-                                      args = [13])
+                                      args = [14])
     disabledMinSamplesSplit = False
     
     minSamplesSplitDelta = minSamplesSplit - math.floor(minSamplesSplit)
@@ -98,7 +98,7 @@ def setDTCParams():
                                       format = "%f",
                                       key = "dtc_min_samples_leaf", 
                                       on_change = setStage,
-                                      args = [13])
+                                      args = [14])
     disabledMinSamplesLeaf = False
     
     minSamplesLeafDelta = minSamplesLeaf - math.floor(minSamplesLeaf)
@@ -123,7 +123,7 @@ def setDTCParams():
                                             format = "%.1f",
                                             key = "dtc_min_weight_fraction_leaf", 
                                             on_change = setStage,
-                                            args = [13])
+                                            args = [14])
     disabledMinWeightFractionLeaf = False
     
     if minWeightFractionLeaf < 0 or minWeightFractionLeaf > 0.5:
@@ -140,7 +140,7 @@ def setDTCParams():
                                index = 3,
                                key = "dtc_max_features1",
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     disabledMaxFeatures = False
     
     if maxFeatures == "int or float":
@@ -151,7 +151,7 @@ def setDTCParams():
                                      format = "%f",
                                      key = "dtc_max_features2",
                                      on_change = setStage,
-                                     args = [13])
+                                     args = [14])
        
        if maxFeatures is not None:
            
@@ -177,7 +177,7 @@ def setDTCParams():
                                    format = "%f",
                                    key = "dtc_max_leaf_nodes",
                                    on_change = setStage,
-                                   args = [13],
+                                   args = [14],
                                    placeholder = "None")
     disabledMaxLeafNodes = False
     
@@ -203,7 +203,7 @@ def setDTCParams():
                                           format = "%.1f",
                                           key = "dtc_min_impurity_decrease", 
                                           on_change = setStage,
-                                          args = [13])
+                                          args = [14])
     disabledMinImpurityDecrease = False
     
     if minImpurityDecrease < 0:
@@ -220,7 +220,7 @@ def setDTCParams():
                                index = 1,
                                key = "dtc_class_weight", 
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     
     #----------
     # ccp_alpha
@@ -232,7 +232,7 @@ def setDTCParams():
                                format = "%.1f",
                                key = "dtc_ccp_alpha", 
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     disabledCcpAlpha = False
     
     if ccpAlpha < 0:
@@ -271,7 +271,7 @@ def setGNBCParams():
                           index = 0,
                           key = "gnbc_priors",
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     
     if priors == "None":
        priorsValue = None
@@ -285,7 +285,7 @@ def setGNBCParams():
                                       max_value = 1.0, 
                                       value = 0.5,
                                       on_change = setStage,
-                                      args = [13])
+                                      args = [14])
          
        classZeroPrior = 1 - classOnePrior
  
@@ -303,7 +303,7 @@ def setGNBCParams():
                                    step = 1e-10,
                                    format = "%.10f",
                                    on_change = setStage,
-                                   args = [13])
+                                   args = [14])
     disabledVarSmoothing = False
     
     if varSmoothing < 0:
@@ -333,7 +333,7 @@ def setGPCParams():
                                 step = 0.1,
                                 format = "%.1f",
                                 on_change = setStage,
-                                args = [13])
+                                args = [14])
         dictDisabled[kernelName + " Kernel: " + valueName] = False
         
         if kernelName in ["Dot Product", "Pairwise"]:
@@ -356,7 +356,7 @@ def setGPCParams():
                               options = ["fixed", "pair of floats"],
                               index = 1,
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
         
         if bounds == "pair of floats":
         
@@ -365,7 +365,7 @@ def setGPCParams():
                                     step = 1e-6,
                                     format = "%.6f",
                                     on_change = setStage,
-                                    args = [13])
+                                    args = [14])
            dictDisabled[kernelName + " Kernel: " + valueName + "_bounds_float1"] = False
            
            if float1 < 0:
@@ -379,7 +379,7 @@ def setGPCParams():
                                     step = 1e-6,
                                     format = "%.6f",
                                     on_change = setStage,
-                                    args = [13])
+                                    args = [14])
            dictDisabled[kernelName + " Kernel: " + valueName + "_bounds_float2"] = False
            
            if float2 < 0:
@@ -406,7 +406,7 @@ def setGPCParams():
                           options = kernelOptions,
                           index = 7,
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     
     dictDisabled = {}
     
@@ -433,7 +433,7 @@ def setGPCParams():
                               step = 0.1,
                               format = "%.1f",
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
          dictDisabled["nu"] = False 
                  
          if nu <= 0:
@@ -455,7 +455,7 @@ def setGPCParams():
                                options = metricOptions,
                                index = 4,
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
          kernel = sgpk.PairwiseKernel(gamma = value,
                                       gamma_bounds = bounds,
                                       metric = metric)
@@ -493,7 +493,7 @@ def setGPCParams():
                              options = ["fmin_l_bfgs_b", None],
                              index = 0,
                              on_change = setStage,
-                             args = [13])
+                             args = [14])
     
     #---------------------
     # n_restarts_optimizer
@@ -504,7 +504,7 @@ def setGPCParams():
                                          step = 1.0,
                                          format = "%f",
                                          on_change = setStage,
-                                         args = [13])
+                                         args = [14])
     disabledNRestartsOptimizer = False
     
     nRestartsOptimizerDelta = nRestartsOptimizer - math.floor(nRestartsOptimizer)
@@ -526,7 +526,7 @@ def setGPCParams():
                                      step = 1.0,
                                      format = "%f",
                                      on_change = setStage,
-                                     args = [13])
+                                     args = [14])
     disabledMaxIterPredict = False
     
     maxIterPredictDelta = maxIterPredict - math.floor(maxIterPredict)
@@ -547,7 +547,7 @@ def setGPCParams():
                               options = [True, False],
                               index = 0,
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
     
     #------------
     # multi_class
@@ -557,7 +557,7 @@ def setGPCParams():
                               options = ["one_vs_rest", "one_vs_one"],
                               index = 0,
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
     
     params = {}
     params["kernel"] = kernel
@@ -589,7 +589,7 @@ def setkNNCParams():
                                  step = 1.0,
                                  format = "%f",
                                  on_change = setStage,
-                                 args = [13])
+                                 args = [14])
     disabledNNeighbors = False
     
     nNeighborsDelta = nNeighbors - math.floor(nNeighbors)
@@ -610,7 +610,7 @@ def setkNNCParams():
                            options = ["uniform", "distance", None],
                            index = 0,
                            on_change = setStage,
-                           args = [13])
+                           args = [14])
     
     #----------
     # algorithm
@@ -620,7 +620,7 @@ def setkNNCParams():
                              options = ["auto", "ball_tree", "kd_tree", "brute"],
                              index = 0,
                              on_change = setStage,
-                             args = [13])
+                             args = [14])
     
     #----------
     # leaf_size
@@ -631,7 +631,7 @@ def setkNNCParams():
                                step = 1.0,
                                format = "%f",
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     disabledLeafSize = False
     
     leafSizeDelta = leafSize - math.floor(leafSize)
@@ -653,7 +653,7 @@ def setkNNCParams():
                         step = 0.1,
                         format = "%.1f",
                         on_change = setStage,
-                        args = [13])
+                        args = [14])
     disabledP = False
     
     if p < 1:
@@ -703,7 +703,7 @@ def setkNNCParams():
                           options = metricOptions,
                           index = index,
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     
     params = {}
     params["n_neighbors"] = nNeighbors
@@ -728,7 +728,7 @@ def setLRParams():
                            options = [None, "l1", "l2", "elasticnet"],
                            index = 2,
                            on_change = setStage,
-                           args = [13])
+                           args = [14])
     
     #----
     # tol
@@ -740,7 +740,7 @@ def setLRParams():
                           format = "%.5f",
                           key = "lr_tol",
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     disabledTol = False
     
     if tol < 0:
@@ -760,7 +760,7 @@ def setLRParams():
                            format = "%.1f",
                            key = "lrC",
                            on_change = setStage,
-                           args = [13])
+                           args = [14])
        disabledC = False
        
        if C <= 0:
@@ -776,7 +776,7 @@ def setLRParams():
                                 options = [True, False],
                                 index = 0,
                                 on_change = setStage,
-                                args = [13])
+                                args = [14])
     
     #------------------
     # intercept_scaling
@@ -787,7 +787,7 @@ def setLRParams():
                                        step = 0.1,
                                        format = "%.1f",
                                        on_change = setStage,
-                                       args = [13])
+                                       args = [14])
     disabledInterceptScaling = False
        
     if interceptScaling <= 0:
@@ -804,7 +804,7 @@ def setLRParams():
                                index = 1,
                                key = "lr_class_weight", 
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     
     #-------
     # solver
@@ -822,7 +822,7 @@ def setLRParams():
                           options = solverOptions,
                           index = 0,
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     
     #-----
     # dual
@@ -833,7 +833,7 @@ def setLRParams():
                            options = [True, False],
                            index = 1,
                            on_change = setStage,
-                           args = [13])
+                           args = [14])
     
     #---------
     # max_iter
@@ -844,7 +844,7 @@ def setLRParams():
                               step = 1.0,
                               format = "%f",
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
     disabledMaxIter = False
     
     maxIterDelta = maxIter - math.floor(maxIter)
@@ -869,7 +869,7 @@ def setLRParams():
                               options = multiClassOptions,
                               index = 0,
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
     
     #---------
     # l1_ratio
@@ -882,7 +882,7 @@ def setLRParams():
                                  step = 0.01,
                                  format = "%.2f",
                                  on_change = setStage,
-                                 args = [13],
+                                 args = [14],
                                  placeholder = "None")
        disabledL1Ratio = False
        
@@ -932,7 +932,7 @@ def setMLPCParams():
                                     step = 1.0,
                                     format = "%f",
                                     on_change = setStage,
-                                    args = [13])
+                                    args = [14])
     disabledNHiddenLayers = False
     
     nHiddenLayersDelta = nHiddenLayers - math.floor(nHiddenLayers)
@@ -956,7 +956,7 @@ def setMLPCParams():
                                       step = 1.0,
                                       format = "%f",
                                       on_change = setStage,
-                                      args = [13])
+                                      args = [14])
         disabledNNeurons[i] = False
         
         nNeuronsDelta[i] = nNeurons[i] - math.floor(nNeurons[i])
@@ -980,7 +980,7 @@ def setMLPCParams():
                               options = ["identity", "logistic", "tanh", "relu"],
                               index = 3,
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
     
     #-------
     # solver
@@ -990,7 +990,7 @@ def setMLPCParams():
                           options = ["lbfgs", "sgd", "adam"],
                           index = 2,
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     
     #------
     # alpha
@@ -1001,7 +1001,7 @@ def setMLPCParams():
                             step = 1e-5,
                             format = "%.5f",
                             on_change = setStage,
-                            args = [13])
+                            args = [14])
     disabledAlpha = False
     
     if alpha < 0:
@@ -1017,7 +1017,7 @@ def setMLPCParams():
                              options = ["int", "auto"],
                              index = 1,
                              on_change = setStage,
-                             args = [13])
+                             args = [14])
     disabledBatchSize = False
     
     if batchSize == "int":
@@ -1028,7 +1028,7 @@ def setMLPCParams():
                                    format = "%f",
                                    key = "batch_size",
                                    on_change = setStage,
-                                   args = [13])
+                                   args = [14])
        
        if batchSize is not None:
            
@@ -1051,7 +1051,7 @@ def setMLPCParams():
                                    options = ["constant", "invscaling", "adaptive"],
                                    index = 0,
                                    on_change = setStage,
-                                   args = [13])
+                                   args = [14])
     
     #-------------------
     # learning_rate_init
@@ -1064,7 +1064,7 @@ def setMLPCParams():
                                           step = 1e-4,
                                           format = "%.4f",
                                           on_change = setStage,
-                                          args = [13])
+                                          args = [14])
        disabledLearningRateInit = False
        
        if learningRateInit <= 0:
@@ -1083,7 +1083,7 @@ def setMLPCParams():
                                 step = 0.01,
                                 format = "%.2f",
                                 on_change = setStage,
-                                args = [13])
+                                args = [14])
        disabledPowerT = False
        
        if powerT < 0:
@@ -1100,7 +1100,7 @@ def setMLPCParams():
                               step = 1.0,
                               format = "%f",
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
     disabledMaxIter = False
     
     maxIterDelta = maxIter - math.floor(maxIter)
@@ -1122,7 +1122,7 @@ def setMLPCParams():
                               options = [True, False],
                               index = 0,
                               on_change = setStage,
-                              args = [13]) 
+                              args = [14]) 
        
     #----
     # tol
@@ -1134,7 +1134,7 @@ def setMLPCParams():
                           format = "%.5f",
                           key = "mlpc_tol",
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     disabledTol = False
     
     if tol < 0:
@@ -1153,7 +1153,7 @@ def setMLPCParams():
                                   step = 0.01,
                                   format = "%.2f",
                                   on_change = setStage,
-                                  args = [13])
+                                  args = [14])
        disabledMomentum = False
        
        if momentum < 0 or momentum > 1:
@@ -1170,7 +1170,7 @@ def setMLPCParams():
                                         options = [True, False],
                                         index = 0,
                                         on_change = setStage,
-                                        args = [13]) 
+                                        args = [14]) 
         
     #---------------
     # early_stopping
@@ -1180,7 +1180,7 @@ def setMLPCParams():
                                  options = [True, False],
                                  index = 1,
                                  on_change = setStage,
-                                 args = [13])  
+                                 args = [14])  
     
     #--------------------
     # validation_fraction
@@ -1193,7 +1193,7 @@ def setMLPCParams():
                                             step = 0.01,
                                             format = "%.2f",
                                             on_change = setStage,
-                                            args = [13])
+                                            args = [14])
        disabledValidationFraction = False
        
        if validationFraction <= 0 or validationFraction >= 1:
@@ -1212,7 +1212,7 @@ def setMLPCParams():
                                step = 0.01,
                                format = "%.2f",
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
        disabledBeta1 = False
        
        if beta1 < 0 or beta1 >= 1:
@@ -1230,7 +1230,7 @@ def setMLPCParams():
                                step = 0.0001,
                                format = "%.4f",
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
        disabledBeta2 = False
        
        if beta2 < 0 or beta2 >= 1:
@@ -1248,7 +1248,7 @@ def setMLPCParams():
                                  step = 1e-9,
                                  format = "%.9f",
                                  on_change = setStage,
-                                 args = [13])
+                                 args = [14])
        disabledEpsilon = False
        
        if epsilon <= 0:
@@ -1265,7 +1265,7 @@ def setMLPCParams():
                                     step = 1.0,
                                     format = "%f",
                                     on_change = setStage,
-                                    args = [13])
+                                    args = [14])
     disabledNIterNoChange = False
     
     nIterNoChangeDelta = nIterNoChange - math.floor(nIterNoChange)
@@ -1289,7 +1289,7 @@ def setMLPCParams():
                                 step = 1.0,
                                 format = "%f",
                                 on_change = setStage,
-                                args = [13])
+                                args = [14])
        disabledMaxFun = False
        
        maxFunDelta = maxFun - math.floor(maxFun)
@@ -1370,7 +1370,7 @@ def setQDAParams():
                           index = 0,
                           key = "qda_priors",
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     
     if priors == "None":
        priorsValue = None
@@ -1384,7 +1384,7 @@ def setQDAParams():
                                       max_value = 1.0, 
                                       value = 0.5,
                                       on_change = setStage,
-                                      args = [13])
+                                      args = [14])
          
        classZeroPrior = 1 - classOnePrior
  
@@ -1402,7 +1402,7 @@ def setQDAParams():
                                step = 0.1,
                                format = "%.1f",
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     disabledRegParam = False
     
     if regParam < 0 or regParam > 1:
@@ -1418,7 +1418,7 @@ def setQDAParams():
                                    options = [True, False],
                                    index = 1,
                                    on_change = setStage,
-                                   args = [13])
+                                   args = [14])
     
     #----
     # tol
@@ -1430,7 +1430,7 @@ def setQDAParams():
                           format = "%.5f",
                           key = "qda_tol",
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     disabledTol = False
     
     if tol < 0:
@@ -1460,7 +1460,7 @@ def setRFCParams():
                                   step = 1.0,
                                   format = "%f",
                                   on_change = setStage,
-                                  args = [13])
+                                  args = [14])
     disabledNEstimators = False
     
     nEstimatorsDelta = nEstimators - math.floor(nEstimators)
@@ -1482,7 +1482,7 @@ def setRFCParams():
                              index = 0,
                              key = "rfc_criterion",
                              on_change = setStage,
-                             args = [13])
+                             args = [14])
     
     #----------
     # max_depth
@@ -1494,7 +1494,7 @@ def setRFCParams():
                                   format = "%f",
                                   key = "rfc_max_depth", 
                                   on_change = setStage,
-                                  args = [13],
+                                  args = [14],
                                   placeholder = "None")
     disabledMaxDepth = False
     
@@ -1521,7 +1521,7 @@ def setRFCParams():
                                       format = "%f",
                                       key = "rfc_min_samples_split", 
                                       on_change = setStage,
-                                      args = [13])
+                                      args = [14])
     disabledMinSamplesSplit = False
     
     minSamplesSplitDelta = minSamplesSplit - math.floor(minSamplesSplit)
@@ -1546,7 +1546,7 @@ def setRFCParams():
                                       format = "%f",
                                       key = "rfc_min_samples_leaf", 
                                       on_change = setStage,
-                                      args = [13])
+                                      args = [14])
     disabledMinSamplesLeaf = False
     
     minSamplesLeafDelta = minSamplesLeaf - math.floor(minSamplesLeaf)
@@ -1571,7 +1571,7 @@ def setRFCParams():
                                             format = "%.1f",
                                             key = "rfc_min_weight_fraction_leaf", 
                                             on_change = setStage,
-                                            args = [13])
+                                            args = [14])
     disabledMinWeightFractionLeaf = False
     
     if minWeightFractionLeaf < 0 or minWeightFractionLeaf > 0.5:
@@ -1588,7 +1588,7 @@ def setRFCParams():
                                index = 1,
                                key = "rfc_max_features1",
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     disabledMaxFeatures = False
     
     if maxFeatures == "int or float":
@@ -1599,7 +1599,7 @@ def setRFCParams():
                                      format = "%f",
                                      key = "rfc_max_features2",
                                      on_change = setStage,
-                                     args = [13])
+                                     args = [14])
        
        if maxFeatures is not None:
            
@@ -1625,7 +1625,7 @@ def setRFCParams():
                                    format = "%f",
                                    key = "rfc_max_leaf_nodes",
                                    on_change = setStage,
-                                   args = [13],
+                                   args = [14],
                                    placeholder = "None")
     disabledMaxLeafNodes = False
     
@@ -1651,7 +1651,7 @@ def setRFCParams():
                                           format = "%.1f",
                                           key = "rfc_min_impurity_decrease", 
                                           on_change = setStage,
-                                          args = [13])
+                                          args = [14])
     disabledMinImpurityDecrease = False
     
     if minImpurityDecrease < 0:
@@ -1667,7 +1667,7 @@ def setRFCParams():
                              options = [True, False],
                              index = 0,
                              on_change = setStage,
-                             args = [13])
+                             args = [14])
      
     #----------
     # oob_score
@@ -1678,7 +1678,7 @@ def setRFCParams():
                                options = [True, False],
                                index = 1,
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     
     #-------------
     # class_weight
@@ -1689,7 +1689,7 @@ def setRFCParams():
                                index = 2,
                                key = "rfc_class_weight", 
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     
     #----------
     # ccp_alpha
@@ -1701,7 +1701,7 @@ def setRFCParams():
                                format = "%.1f",
                                key = "rfc_ccp_alpha", 
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     disabledCcpAlpha = False
     
     if ccpAlpha < 0:
@@ -1720,7 +1720,7 @@ def setRFCParams():
                                     step = 1.0,
                                     format = "%f",
                                     on_change = setStage,
-                                    args = [13],
+                                    args = [14],
                                     placeholder = "None")
        disabledMaxSamples = False
        
@@ -1777,7 +1777,7 @@ def setSVCParams():
                         format = "%.1f",
                         key = "svcC",
                         on_change = setStage,
-                        args = [13])
+                        args = [14])
     disabledC = False
        
     if C <= 0:
@@ -1793,7 +1793,7 @@ def setSVCParams():
                           options = ["linear", "poly", "rbf", "sigmoid", "precomputed"],
                           index = 2,
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     
     #-------
     # degree
@@ -1806,7 +1806,7 @@ def setSVCParams():
                                 step = 1.0,
                                 format = "%f",
                                 on_change = setStage,
-                                args = [13])
+                                args = [14])
        disabledDegree = False
        
        degreeDelta = degree - math.floor(degree)
@@ -1827,7 +1827,7 @@ def setSVCParams():
                           options = ["scale", "auto", "float"],
                           index = 0,
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     gammaCopy = gamma
     
     if gamma == "float":
@@ -1837,7 +1837,7 @@ def setSVCParams():
                                step = 0.1,
                                format = "%.1f",
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
        disabledGamma = False
        
        if gamma is not None:
@@ -1858,7 +1858,7 @@ def setSVCParams():
                                step = 0.1,
                                format = "%.1f",
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     
     #----------
     # shrinking
@@ -1868,7 +1868,7 @@ def setSVCParams():
                              options = [True, False],
                              index = 0,
                              on_change = setStage,
-                             args = [13])
+                             args = [14])
         
     #----
     # tol
@@ -1880,7 +1880,7 @@ def setSVCParams():
                           format = "%.4f",
                           key = "svc_tol",
                           on_change = setStage,
-                          args = [13])
+                          args = [14])
     disabledTol = False
            
     if tol <= 0:
@@ -1897,7 +1897,7 @@ def setSVCParams():
                                 step = 1.0,
                                 format = "%.1f",
                                 on_change = setStage,
-                                args = [13])
+                                args = [14])
     disabledCacheSize = False
            
     if cacheSize <= 0:
@@ -1913,7 +1913,7 @@ def setSVCParams():
                                options = ["balanced", None],
                                index = 1,
                                on_change = setStage,
-                               args = [13])
+                               args = [14])
     
     #---------
     # max_iter
@@ -1924,7 +1924,7 @@ def setSVCParams():
                               step = 1.0,
                               format = "%f",
                               on_change = setStage,
-                              args = [13])
+                              args = [14])
     disabledMaxIter = False
     
     maxIterDelta = maxIter - math.floor(maxIter)
@@ -1945,7 +1945,7 @@ def setSVCParams():
                                          options = ["ovo", "ovr"],
                                          index = 1,
                                          on_change = setStage,
-                                         args = [13])
+                                         args = [14])
     
     #-----------
     # break_ties
@@ -1955,7 +1955,7 @@ def setSVCParams():
                              options = [True, False],
                              index = 1,
                              on_change = setStage,
-                             args = [13])
+                             args = [14])
     
     params = {}
     params["C"] = C
