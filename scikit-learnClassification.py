@@ -1,16 +1,16 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: April 15, 2024
+Date Modified: April 16, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
-selection of algorithms that are implemented in scikit-learn."
+selection of algorithms that are implemented in scikit-learn.
 ----------------------------------------------------------------------------------------------
 """
 
 from helperFunctions import actOnClassImbalance, binarizeTarget, changeTargetVariable, \
-                            confirmTargetVariable, displayClassDistribution, displayDataset, \
-                            printTrainingResults, setAllOptions, setOptions, setStage
+                            checkUploadedTestSet, confirmTargetVariable, displayClassDistribution, \
+                            displayDataset, printTrainingResults, setAllOptions, setOptions, setStage
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import load_breast_cancer, load_diabetes, load_digits, load_iris, load_wine
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -960,34 +960,29 @@ if st.session_state.stage >= 16:
       if uploadedTestSet is not None:
     
          testSet = pd.read_csv(uploadedTestSet)
+         output = checkUploadedTestSet(testSet, features, targetVariable, nFeaturesToUse, nFeatures)
          
-         if nFeaturesToUse < nFeatures:
-             
-            testSet = testSet[features + [targetVariable]]
-            header = "**Test Set with Selected Features**"
-            
+         if type(output) == tuple:
+            toDisplay, testSet, header = output
          else:
+            toDisplay = output
+              
+         if toDisplay:
              
-            columns = testSet.columns.tolist()
-            columns.remove(targetVariable)
-            columns = columns + [targetVariable]
-            testSet = testSet[columns] 
-            header = "**Test Set**"
-         
-         if nUniqueValues > 2:
-                           
-            if vType == type1:
-                 
-               y = testSet[[targetVariable]] 
-               testSet["binarized " + targetVariable] = binarizer.transform(y).astype(int)
-               
+            if nUniqueValues > 2:
+                               
+               if vType == type1:
+                     
+                  y = testSet[[targetVariable]] 
+                  testSet["binarized " + targetVariable] = binarizer.transform(y).astype(int)
+                   
+               else:
+                  testSet["binarized " + targetVariable] = testSet[targetVariable].apply(lambda x: 1 if x in positiveClasses else 0)
+                   
+               displayDataset(dataset = testSet, header = header)
+                   
             else:
-               testSet["binarized " + targetVariable] = testSet[targetVariable].apply(lambda x: 1 if x in positiveClasses else 0)
-               
-            displayDataset(dataset = testSet, header = header)
-               
-         else:
-            displayDataset(dataset = testSet, header = header)
+               displayDataset(dataset = testSet, header = header)
       
       else:
          setStage(16)

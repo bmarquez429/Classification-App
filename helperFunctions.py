@@ -1,7 +1,7 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: April 2, 2024
+Date Modified: April 17, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -205,7 +205,71 @@ def changeTargetVariable():
     setStage(4)
     del st.session_state["confirmTargetVariable"]
     del st.session_state["toCategorical"]
- 
+    
+def checkUploadedTestSet(testSet, features, targetVariable, nFeaturesToUse, nFeatures):
+    '''Check the columns of the uploaded test set.'''
+    
+    setDifference = set(features + [targetVariable]).difference(set(testSet.columns.tolist()))
+    listDifference = list(setDifference)
+    
+    if len(listDifference) == 0:
+    
+       if nFeaturesToUse < nFeatures:
+          header = "**Test Set with Selected Features**"
+       else:
+          header = "**Test Set**"
+       
+       testSet = testSet[features + [targetVariable]]
+       toDisplay = True
+       
+       return toDisplay, testSet, header
+          
+    else:
+        
+       if targetVariable in listDifference:
+           
+          messagePart1 = "The selected target variable is not in the test set."
+          listDifference.remove(targetVariable)
+          
+       else:
+          messagePart1 = ""
+          
+       listLength = len(listDifference)
+       
+       if listLength == 0:
+          messagePart2 = ""
+       elif listLength == 1:
+            messagePart2 = "feature `" + listDifference[0] + "` is not in the test set."
+       elif listLength == 2:
+            messagePart2 = "features `" + listDifference[0] + "` and `" + listDifference[1] + \
+                           "` are not in the test set."
+       else:
+           
+           featuresString = ""
+           for i in range(listLength):
+               
+               if i == listLength - 1:
+                  featuresString += "and `" + listDifference[i] + "`"
+               else:
+                  featuresString += "`" + listDifference[i] + "`, "
+                  
+           messagePart2 = "features " + featuresString + " are not in the test set." 
+       
+       if messagePart1 == "":
+          messagePart = "The " + messagePart2
+       else:
+           
+          if messagePart2 == "":
+             messagePart = messagePart1
+          else:
+             messagePart = messagePart = messagePart1 + " Furthermore, the " + messagePart2
+          
+       st.markdown(":red[" + messagePart + " Please upload a valid test set.]")
+       toDisplay = False
+       setStage(16)
+                   
+       return toDisplay
+    
 def confirmTargetVariable(targetVariable = None):
     '''Confirm a selected target variable.'''
     
