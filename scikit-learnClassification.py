@@ -1,7 +1,7 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: April 16, 2024
+Date Modified: April 17, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn.
@@ -131,7 +131,10 @@ if st.session_state.stage == 1:
    st.session_state.case3 = case3
    st.session_state.datasetAvailability = datasetAvailability
    
-   st.button(label = "Next", key = "datasetAvailabilityNext", on_click = setStage, args = [2])
+   if datasetAvailability is not None:
+      st.button(label = "Next", key = "datasetAvailabilityNext", on_click = setStage, args = [2])
+   else:
+      setStage(1)
    
 #--------------------------
 # Get the selected dataset.
