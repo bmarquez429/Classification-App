@@ -1,7 +1,7 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: April 17, 2024
+Date Modified: April 18, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn.
@@ -11,6 +11,7 @@ selection of algorithms that are implemented in scikit-learn.
 from helperFunctions import actOnClassImbalance, binarizeTarget, changeTargetVariable, \
                             checkUploadedTestSet, confirmTargetVariable, displayClassDistribution, \
                             displayDataset, printTrainingResults, setAllOptions, setOptions, setStage
+from pathlib import Path
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import load_breast_cancer, load_diabetes, load_digits, load_iris, load_wine
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -30,7 +31,6 @@ import joblib
 import matplotlib.pyplot as plt
 import modelParams
 import numpy as np
-import os
 import pandas as pd
 import pickle
 import scipy
@@ -1340,12 +1340,12 @@ if st.session_state.stage >= 19:
          for filename in filenames:
           
              model = retrainedModels[filename]
-             downloadFolder = os.path.expanduser("~") + "\\Downloads\\"
+             downloadFolder = str(Path.home()/"Downloads")
           
              if fileFormat == "joblib":
-                joblib.dump(model, downloadFolder + filename + ".joblib") 
+                joblib.dump(model, downloadFolder + "\\" + filename + ".joblib") 
              else:
-                pickle.dump(model, open(downloadFolder + filename + ".pkl", "wb"))
+                pickle.dump(model, open(downloadFolder + "\\" + filename + ".pkl", "wb"))
           
          if len(filenames) == 1:
             messagePart = "Model saved as a " + fileFormat + " file in " 
