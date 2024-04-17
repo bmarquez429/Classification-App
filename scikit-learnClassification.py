@@ -1340,18 +1340,19 @@ if st.session_state.stage >= 19:
          for filename in filenames:
           
              model = retrainedModels[filename]
+             downloadFolder = os.path.expanduser("~") + "\\Downloads\\"
           
              if fileFormat == "joblib":
-                joblib.dump(model, filename + ".joblib") 
+                joblib.dump(model, downloadFolder + filename + ".joblib") 
              else:
-                pickle.dump(model, open(filename + ".pkl", "wb"))
+                pickle.dump(model, open(downloadFolder + filename + ".pkl", "wb"))
           
          if len(filenames) == 1:
             messagePart = "Model saved as a " + fileFormat + " file in " 
          else:
             messagePart = "Models saved as " + fileFormat + " files in " 
           
-         st.write(messagePart + os.getcwd() + ". Click the `Start Over` or `Reset` buttons to go back to the intro page \
+         st.write(messagePart + downloadFolder + ". Click the `Start Over` or `Reset` buttons to go back to the intro page \
                   or close the browser's tab displaying this web app to exit.")
               
    else:
