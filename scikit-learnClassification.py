@@ -11,7 +11,6 @@ selection of algorithms that are implemented in scikit-learn.
 from helperFunctions import actOnClassImbalance, binarizeTarget, changeTargetVariable, \
                             checkUploadedTestSet, confirmTargetVariable, displayClassDistribution, \
                             displayDataset, printTrainingResults, setAllOptions, setOptions, setStage
-from pathlib import Path
 from sklearn.compose import ColumnTransformer
 from sklearn.datasets import load_breast_cancer, load_diabetes, load_digits, load_iris, load_wine
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -27,7 +26,6 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-import joblib
 import matplotlib.pyplot as plt
 import modelParams
 import numpy as np
@@ -93,8 +91,8 @@ if "trainingSucceeded" not in st.session_state:
 if "trainingFailed" not in st.session_state:   
    st.session_state.trainingFailed = []  
    
-if "retrainedModels" not in st.session_state:
-   st.session_state.retrainedModels = {}
+if "retrainedModel" not in st.session_state:
+   st.session_state.retrainedModel = {}
 
 nUniqueValues = st.session_state.nUniqueValues
 toSplit = False
@@ -1166,7 +1164,6 @@ if st.session_state.stage >= 18:
    if ts > 1:
         
       st.write(" ")
-      st.write(" ")
        
       if tf > 0:
          messagePart = " successfully trained "
@@ -1184,25 +1181,20 @@ if st.session_state.stage >= 18:
            st.write("The best model among the " + str(ts) + messagePart + "models on the basis of \
                      their ROC AUC scores on the test set is " + trainingSucceeded[indicesMaxRocAucScore[0]] + ".")  
       elif n == 2 and ts >= 3:
-           st.write("The best models among the " + str(ts) + messagePart + "models on the basis of \
-                     their ROC AUC scores on the test set are " + trainingSucceeded[indicesMaxRocAucScore[0]] + \
-                     " and " + trainingSucceeded[indicesMaxRocAucScore[1]] + ".")
-      elif n >= 3 and ts >=3 and n != ts:
-           
-           st.write("The best models among the " + str(ts) + messagePart + "models on the basis of \
-                     their ROC AUC scores on the test set are:")
-                    
-           for i in range(n):
-               st.write("(" + str(i + 1) + ") " + trainingSucceeded[indicesMaxRocAucScore[i]])
-                    
+           bestModelsMessage = "The best models among the " + str(ts) + messagePart + "models on the basis of \
+                               their ROC AUC scores on the test set are " + trainingSucceeded[indicesMaxRocAucScore[0]] + \
+                               " and " + trainingSucceeded[indicesMaxRocAucScore[1]] + ". "
+      elif n >= 3 and ts >=3 and n != ts:     
+           bestModelsMessage = "There are " + str(n) + " best models among the " + str(ts) + messagePart + "models \
+                                on the basis of their ROC AUC scores on the test set. "
       elif n == ts:
-           st.write("The" + messagePart + "models have the same ROC AUC score on the test set.")
+           bestModelsMessage = "The" + messagePart + "models have the same ROC AUC score on the test set. "
     
    toRetrain = True            
        
-#---------------------------
-# Retrain the best model(s).
-#---------------------------
+#----------------------
+# Retrain a best model.
+#----------------------
 
 if toRetrain:
    
@@ -1246,7 +1238,7 @@ if toRetrain:
    else:
       y = datasetRetrain[targetVariable].to_numpy()
       
-   retrainedModels = {}
+   retrainedModel = {}
    
    if ts == 1 or n == 1:
        
@@ -1273,11 +1265,14 @@ if toRetrain:
       for i in range(1, len(modelNameParts)):
           filename += modelNameParts[i]
       
-      if st.button(label = "Retrain" + messagePart2 + "model", on_click = setStage, args = [19]):
+      st.button(label = "Retrain" + messagePart2 + "model", on_click = setStage, args = [19])
          
-         model.fit(x, y)
-         retrainedModels[filename] = model
-         st.session_state.retraindedModels = retrainedModels
+      model.fit(x, y)
+      retrainedModel[filename] = model
+      st.session_state.retraindedModel = retrainedModel
+         
+      messagePart = "Click the `Start Over` or `Reset` buttons to go back to the intro page or close the \
+                     browser's tab displaying this web app to exit."
          
    else:
       
@@ -1287,77 +1282,63 @@ if toRetrain:
            messagePart2 = " successfully trained "
       else:
          messagePart2 = " best " 
-       
-      st.write("Click the button below to retrain the" + messagePart2 + "models using" + messagePart1 + \
-               "the full dataset (the union of the training and test sets).")
-   
-      if st.button(label = "Retrain the" + messagePart2 + "models", on_click = setStage, args = [19]):
-       
-         for i in range(n):
-          
-             modelName = trainingSucceeded[indicesMaxRocAucScore[i]]
-             model = st.session_state.models[modelName]
-        
-             modelNameParts = modelName.split() 
-             filename = modelNameParts[0].lower()
-       
-             for j in range(1, len(modelNameParts)):
-                 filename += modelNameParts[j]
-          
-             model.fit(x, y)
-             retrainedModels[filename] = model
              
-         st.session_state.retraindedModels = retrainedModels
-                 
-#-----------------------------
-# Save the retrained model(s).
-#-----------------------------
+      label = bestModelsMessage + "Select one" + messagePart2 + "model to retrain using" + messagePart1 + \
+              "the full dataset (the union of the training and test sets)."
+      modelToRetrain = st.radio(label = label,
+                                options = [trainingSucceeded[indicesMaxRocAucScore[i]] for i in range(n)],
+                                index = None,
+                                on_change = setStage,
+                                args = [18])
+      
+      if modelToRetrain is not None:
+          
+         st.button(label = "Retrain the selected model", on_click = setStage, args = [19])
+         
+         model = st.session_state.models[modelToRetrain]
+    
+         modelNameParts = modelToRetrain.split() 
+         filename = modelNameParts[0].lower()
+   
+         for j in range(1, len(modelNameParts)):
+             filename += modelNameParts[j]
+      
+         model.fit(x, y)
+         retrainedModel[filename] = model
+         st.session_state.retraindedModel = retrainedModel
+         
+         messagePart = "You may select another model to retrain and save. You may also click the `Start Over` or \
+                        `Reset` buttons to go back to the intro page or close the browser's tab displaying this \
+                        web app to exit."
+         
+      else:
+         setStage(18)
+       
+#--------------------------
+# Save the retrained model.
+#--------------------------
 
 if st.session_state.stage >= 19:
     
    st.write("Retraining completed.")     
     
-   retrainedModels = st.session_state.retraindedModels
-   filenames = list(retrainedModels.keys())
+   retrainedModel = st.session_state.retraindedModel
+   filename = list(retrainedModel.keys())[0]
+   model = retrainedModel[filename]
    
    st.write(" ")
+           
+   pickleObject = pickle.dumps(model)
    
-   if len(filenames) == 1:
-      messagePart = "model"
-   else:
-      messagePart = "models"
+   if st.download_button(label = "Save the retrained model", 
+                      data = pickleObject, 
+                      file_name = filename + ".pkl",
+                      mime = "application/octet-stream",
+                      on_click = setStage, 
+                      args = [20]):
 
-   fileFormat = st.radio(label = "Please select the file format to be used in saving the " + messagePart + ".", 
-                         options = ["joblib", "pickle"], 
-                         index = None,
-                         on_change = setStage,
-                         args = [19])
-   
-   if fileFormat is not None:
-        
-      if st.button(label = "Save the retrained " + messagePart, on_click = setStage, args = [20]):
-     
-         for filename in filenames:
-          
-             model = retrainedModels[filename]
-             downloadFolder = str(Path.home()/"Downloads")
-          
-             if fileFormat == "joblib":
-                joblib.dump(model, downloadFolder + "\\" + filename + ".joblib") 
-             else:
-                pickle.dump(model, open(downloadFolder + "\\" + filename + ".pkl", "wb"))
-          
-         if len(filenames) == 1:
-            messagePart = "Model saved as a " + fileFormat + " file in " 
-         else:
-            messagePart = "Models saved as " + fileFormat + " files in " 
-          
-         st.write(messagePart + downloadFolder + ". Click the `Start Over` or `Reset` buttons to go back to the intro page \
-                  or close the browser's tab displaying this web app to exit.")
-              
-   else:
-      setStage(19)  
- 
+      st.write("Model saved as a pickle file in the Downloads folder. " + messagePart)
+             
 #-----------
 # Start over
 #-----------
