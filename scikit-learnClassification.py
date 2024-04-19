@@ -1,7 +1,7 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: April 18, 2024
+Date Modified: April 19, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn.
@@ -130,7 +130,15 @@ if st.session_state.stage == 1:
    st.session_state.datasetAvailability = datasetAvailability
    
    if datasetAvailability is not None:
+       
+      if datasetAvailability == case1:
+         st.write("Please ensure that the dataset has been cleaned and is ready for model training and testing.")
+      elif datasetAvailability == case2:
+           st.write("Please ensure that the training set and test set have been cleaned and are ready for \
+                     model training and testing.")
+           
       st.button(label = "Next", key = "datasetAvailabilityNext", on_click = setStage, args = [2])
+      
    else:
       setStage(1)
    
