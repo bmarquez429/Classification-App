@@ -1,7 +1,7 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: April 17, 2024
+Date Modified: May 8, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -533,7 +533,7 @@ def setStage(i):
        st.session_state.selectBalancingMethod = False
        st.session_state.runBalancingMethod = False
        
-    if i <= 8:
+    if i <= 9:
        
        if "trainTestSplit" in st.session_state:
           del st.session_state["trainTestSplit"]
