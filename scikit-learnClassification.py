@@ -67,9 +67,6 @@ if "confirmTargetVariable" not in st.session_state:
 if "nUniqueValues" not in st.session_state:
    st.session_state.nUniqueValues = 0
    
-# if "binarize" not in st.session_state:
-#    st.session_state.binarize = False
-
 if "binarizer" not in st.session_state:
    st.session_state.binarizer = None
    
@@ -103,8 +100,6 @@ if "retrainedModel" not in st.session_state:
 nUniqueValues = st.session_state.nUniqueValues
 toSplit = False
 toRetrain = False   
-
-st.sidebar.write("state = ", st.session_state.stage)
       
 if st.session_state.stage == 0 or st.session_state.stage == 1:
     
