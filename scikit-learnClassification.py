@@ -1,7 +1,7 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: April 19, 2024
+Date Modified: June 18, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn.
@@ -67,9 +67,15 @@ if "confirmTargetVariable" not in st.session_state:
 if "nUniqueValues" not in st.session_state:
    st.session_state.nUniqueValues = 0
    
-if "binarize" not in st.session_state:
-   st.session_state.binarize = False
+# if "binarize" not in st.session_state:
+#    st.session_state.binarize = False
 
+if "binarizer" not in st.session_state:
+   st.session_state.binarizer = None
+   
+if "positiveClasses" not in st.session_state:
+   st.session_state.positiveClasses = None
+   
 if "selectBalancingMethod" not in st.session_state:
    st.session_state.selectBalancingMethod = False
    
@@ -97,6 +103,8 @@ if "retrainedModel" not in st.session_state:
 nUniqueValues = st.session_state.nUniqueValues
 toSplit = False
 toRetrain = False   
+
+st.sidebar.write("state = ", st.session_state.stage)
       
 if st.session_state.stage == 0 or st.session_state.stage == 1:
     
@@ -123,22 +131,22 @@ if st.session_state.stage == 1:
    datasetAvailability = st.radio(label = "Please select the kind of dataset that you will use.",
                                   options = [case1, case2, case3],
                                   index = None)
-   
+
    st.session_state.case1 = case1
    st.session_state.case2 = case2
    st.session_state.case3 = case3
    st.session_state.datasetAvailability = datasetAvailability
-   
+
    if datasetAvailability is not None:
-       
+    
       if datasetAvailability == case1:
          st.write("Please ensure that the dataset has been cleaned and is ready for model training and testing.")
       elif datasetAvailability == case2:
            st.write("Please ensure that the training set and test set have been cleaned and are ready for \
                      model training and testing.")
-           
+        
       st.button(label = "Next", key = "datasetAvailabilityNext", on_click = setStage, args = [2])
-      
+        
    else:
       setStage(1)
    
@@ -253,28 +261,35 @@ if st.session_state.stage >= 3:
 if st.session_state.stage >= 4 or st.session_state.toTargetVariable:
     
    if datasetAvailability in [case1, case2]:
-       
-      targetVariable = st.selectbox(label = "Select the target variable.",
-                                    options = variables,
-                                    index = None,
-                                    on_change = changeTargetVariable,
-                                    placeholder = "Select a variable")
       
-      if targetVariable is not None:
+      @st.experimental_fragment 
+      def selectTargetVariable():
           
-         if targetVariable == variables[-1]:
-            messagePart = ""
-         else:
-            messagePart = "Once the button is clicked, the selected variable will be moved to the \
-                           last column of the displayed dataframe above."
-         
-         st.write("Click the button below to confirm the selection of the target variable. " + messagePart)      
-         st.button(label = "Confirm target variable", 
-                   on_click = confirmTargetVariable, 
-                   args = [targetVariable])
+          targetVariable = st.selectbox(label = "Select the target variable.",
+                                        options = variables,
+                                        index = None,
+                                        on_change = changeTargetVariable,
+                                        placeholder = "Select a variable")
       
-      if targetVariable is None:
-         setStage(4)
+          if targetVariable is not None:
+          
+             if targetVariable == variables[-1]:
+                messagePart = ""
+             else:
+                messagePart = "Once the button is clicked, the selected variable will be moved to the \
+                               last column of the displayed dataframe above."
+         
+             st.write("Click the button below to confirm the selection of the target variable. " + messagePart)      
+             
+             if st.button(label = "Confirm target variable", 
+                          on_click = confirmTargetVariable, 
+                          args = [targetVariable]):
+                st.rerun()
+      
+          if targetVariable is None:
+             setStage(4)
+             
+      selectTargetVariable()
       
    else:
        
@@ -347,36 +362,49 @@ if st.session_state.stage >= 5:
        
    if nUniqueValues > 2 and datasetAvailability in [case1, case2]:
        
-      numericVariables = list(datasetHolder.select_dtypes(include = "number").columns)
       label = "`" + targetVariable + "` is also a numeric variable. Please identify how this variable will be regarded."
       type1 = "continuous variable"
       type2 = "categorical variable with more than 2 classes"
       
-      if targetVariable in numericVariables:
-     
-         vType = st.radio(label = label,
-                          options = [type1, type2],
-                          index = None,
-                          on_change = setStage,
-                          args = [5])
-         
-      else:
-         vType = type2
-    
-      if vType is not None:
+      @st.experimental_fragment 
+      def selectTargetVariableType():
           
-         if datasetAvailability == case1:
-            nextStage = 7
-         elif datasetAvailability == case2:
-              nextStage = 6
+          numericVariables = list(datasetHolder.select_dtypes(include = "number").columns)
+          
+          if targetVariable in numericVariables:
+         
+             vType = st.radio(label = label,
+                              options = [type1, type2],
+                              index = None,
+                              on_change = setStage,
+                              args = [5])
+             
+          else:
+             vType = type2
+             
+          st.session_state.vType = vType
         
-         if vType == type1:
-            binarizer = binarizeTarget(dataset = datasetHolder, classes = uniqueValues, targetVariable = targetVariable,
-                                       variableType = "continuous", currentStage = 5, nextStage = nextStage)
-         else:
-            positiveClasses = binarizeTarget(dataset = datasetHolder, classes = uniqueValues, targetVariable = targetVariable,
-                                             variableType = "categorical", currentStage = 5, nextStage = nextStage)
-   
+          if vType is not None:
+              
+             if datasetAvailability == case1:
+                nextStage = 7
+             elif datasetAvailability == case2:
+                  nextStage = 6
+            
+             if vType == type1:
+                 
+                binarizer = binarizeTarget(dataset = datasetHolder, classes = uniqueValues, targetVariable = targetVariable,
+                                           variableType = "continuous", currentStage = 5, nextStage = nextStage)
+                st.session_state.binarizer = binarizer
+                
+             else:
+                 
+                positiveClasses = binarizeTarget(dataset = datasetHolder, classes = uniqueValues, targetVariable = targetVariable,
+                                                 variableType = "categorical", currentStage = 5, nextStage = nextStage)
+                st.session_state.positiveClasses = positiveClasses
+                
+      selectTargetVariableType()
+                
 #-------------------------------------------------------------------------------------------------
 # If case 2 is selected, display the class distribution of the target variable in the training set
 # and select on how to handle an imbalanced class distribution.
@@ -413,72 +441,82 @@ if st.session_state.stage >= 7 or (st.session_state.toCategorical and nUniqueVal
                                    datasetAvailability == case1):         
     
    if datasetAvailability in [case1, case2]:
-       
-      st.write(" ") 
-      st.write("Select the categorical features and/or continuous features that will be used in \
-                model training and testing.")
-    
-      label1 = "Select categorical features. "
-      label2 = "You may select `All` if all features in the dataset are regarded as categorical and "
-      label3 = "they will all be used in model training and testing. "
-      label4 = "Leave the field blank if no categorical features will be used."
-      categoricalFeatures = st.multiselect(label = label1 + label2 + label3 + label4,
-                                           options = features + ["All"],
-                                           on_change = setStage,
-                                           args = [7],
-                                           placeholder = "")
-      continuousFeatures = []
-      completeSelection = True
-             
-      if len(categoricalFeatures) >= 2 and "All" in categoricalFeatures:
-     
-          st.markdown(":red[You cannot select All together with one or more features. Please edit \
-                       your selection.]")
-          setStage(7)
-    
-      elif len(categoricalFeatures) == 0 or (categoricalFeatures[0] != "All" and len(categoricalFeatures) < len(features)):
-             
-           label1 = "Select continuous features. "
-           label2 = "You may select `All` if all the numeric features in the dataset including those that are not selected as "
-           label3 = "categorical features will be regarded as continuous and will be used in model training and testing. "
-           label4 = "Leave the field blank if no continuous features will be used."
-           continuousFeaturesOptions = set(datasetHolder.select_dtypes(include = "number").columns)
-           continuousFeaturesOptions = continuousFeaturesOptions.difference({targetVariable, "binarized " + targetVariable})
-           continuousFeaturesOptions = list(continuousFeaturesOptions.difference(set(categoricalFeatures)))
-           continuousFeaturesOptions = [f for f in features if f in continuousFeaturesOptions]
-           
-           if len(continuousFeaturesOptions) > 0:
-                  
-              if len(continuousFeaturesOptions) > 2:
-                 continuousFeaturesOptions.append("All")
-                  
-              continuousFeatures = st.multiselect(label = label1 + label2 + label3 + label4,
-                                                 options = continuousFeaturesOptions,
-                                                 on_change = setStage,
-                                                 args = [7],
-                                                 placeholder = "")
-              
-              if len(continuousFeatures) >= 2 and "All" in continuousFeatures:
-                  
-                 st.markdown(":red[You cannot select All together with one or more features. Please edit \
-                              your selection.]")
-                 setStage(7)
-                 completeSelection = False
-                 
-              else:
-                 completeSelection = True
-                  
-      if completeSelection:      
-    
-         st.write("Click the button below to complete the selection of features.")            
       
-         if st.button(label = "Complete selection", key = "featuresSelection", on_click = setStage, 
-                      args = [8]):
+      @st.experimental_fragment 
+      def selectCatAndCont():
        
-            if len(categoricalFeatures) == 0 and len(continuousFeatures) == 0:
+          st.write(" ") 
+          st.write("Select the categorical features and/or continuous features that will be used in \
+                    model training and testing.")
+        
+          label1 = "Select categorical features. "
+          label2 = "You may select `All` if all features in the dataset are regarded as categorical and "
+          label3 = "they will all be used in model training and testing. "
+          label4 = "Leave the field blank if no categorical features will be used."
+          categoricalFeatures = st.multiselect(label = label1 + label2 + label3 + label4,
+                                               options = features + ["All"],
+                                               on_change = setStage,
+                                               args = [7],
+                                               placeholder = "")
+          st.session_state.categoricalFeatures = categoricalFeatures
+          continuousFeatures = []
+          completeSelection = True
+                 
+          if len(categoricalFeatures) >= 2 and "All" in categoricalFeatures:
          
-               st.markdown(":red[Please select at least one feature.]")
-               setStage(7)
+              st.markdown(":red[You cannot select All together with one or more features. Please edit \
+                           your selection.]")
+              setStage(7)
+        
+          elif len(categoricalFeatures) == 0 or (categoricalFeatures[0] != "All" and len(categoricalFeatures) < len(features)):
+                 
+               label1 = "Select continuous features. "
+               label2 = "You may select `All` if all the numeric features in the dataset including those that are not selected as "
+               label3 = "categorical features will be regarded as continuous and will be used in model training and testing. "
+               label4 = "Leave the field blank if no continuous features will be used."
+               continuousFeaturesOptions = set(datasetHolder.select_dtypes(include = "number").columns)
+               continuousFeaturesOptions = continuousFeaturesOptions.difference({targetVariable, "binarized " + targetVariable})
+               continuousFeaturesOptions = list(continuousFeaturesOptions.difference(set(categoricalFeatures)))
+               continuousFeaturesOptions = [f for f in features if f in continuousFeaturesOptions]
+               st.session_state.continuousFeaturesOptions = continuousFeaturesOptions
+               
+               if len(continuousFeaturesOptions) > 0:
+                      
+                  if len(continuousFeaturesOptions) > 2:
+                     continuousFeaturesOptions.append("All")
+                      
+                  continuousFeatures = st.multiselect(label = label1 + label2 + label3 + label4,
+                                                     options = continuousFeaturesOptions,
+                                                     on_change = setStage,
+                                                     args = [7],
+                                                     placeholder = "")
+                  st.session_state.continuousFeatures = continuousFeatures
+                  
+                  if len(continuousFeatures) >= 2 and "All" in continuousFeatures:
+                      
+                     st.markdown(":red[You cannot select All together with one or more features. Please edit \
+                                  your selection.]")
+                     setStage(7)
+                     completeSelection = False
+                     
+                  else:
+                     completeSelection = True
+                      
+          if completeSelection:      
+        
+             st.write("Click the button below to complete the selection of features.")            
+          
+             if st.button(label = "Complete selection", key = "featuresSelection", on_click = setStage, 
+                          args = [8]):
+           
+                if len(categoricalFeatures) == 0 and len(continuousFeatures) == 0:
+             
+                   st.markdown(":red[Please select at least one feature.]")
+                   setStage(7)
+                   
+                st.rerun()
+                
+      selectCatAndCont()
                          
    else:
        
@@ -492,6 +530,10 @@ if st.session_state.stage >= 7 or (st.session_state.toCategorical and nUniqueVal
 if st.session_state.stage >= 8:
    
    if datasetAvailability in [case1, case2]:
+       
+      categoricalFeatures = st.session_state.categoricalFeatures
+      continuousFeaturesOptions = st.session_state.continuousFeaturesOptions
+      continuousFeatures = st.session_state.continuousFeatures
        
       if len(categoricalFeatures) == 1 and categoricalFeatures[0] == "All":
          categoricalFeatures = features
@@ -743,29 +785,41 @@ if st.session_state.stage >= 12:
    model8 = "Random Forest Classifier"
    model9 = "Support Vector Classifier"
    
-   st.checkbox(label = model1, key = model1, on_change = setAllOptions)
-   st.checkbox(label = model2, key = model2, on_change = setAllOptions)
-   st.checkbox(label = model3, key = model3, on_change = setAllOptions)
-   st.checkbox(label = model4, key = model4, on_change = setAllOptions)
-   st.checkbox(label = model5, key = model5, on_change = setAllOptions)
-   st.checkbox(label = model6, key = model6, on_change = setAllOptions)
-   st.checkbox(label = model7, key = model7, on_change = setAllOptions)
-   st.checkbox(label = model8, key = model8, on_change = setAllOptions)
-   st.checkbox(label = model9, key = model9, on_change = setAllOptions)
-   st.checkbox("Select all models", key = 'allOptions', on_change = setOptions)
-   
-   options = [model1, model2, model3, model4, model5, model6, model7, model8, model9]
-   selected = 0
-   for option in options:
-       selected += st.session_state[option]
-   
-   st.write("Click the button below to complete the selection of models.")
-   clicked = st.button(label = "Complete selection", key = "modelSelection", on_click = setStage, args = [13])
-   
-   if clicked and selected == 0:
+   @st.experimental_fragment 
+   def selectModels():
        
-      st.markdown(":red[Please select at least one model to train.]")
-      setStage(12)
+       disabledSelectModels = False
+       st.checkbox(label = model1, key = model1, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox(label = model2, key = model2, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox(label = model3, key = model3, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox(label = model4, key = model4, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox(label = model5, key = model5, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox(label = model6, key = model6, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox(label = model7, key = model7, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox(label = model8, key = model8, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox(label = model9, key = model9, on_change = setAllOptions, disabled = disabledSelectModels)
+       st.checkbox("Select all models", key = 'allOptions', on_change = setOptions, disabled = disabledSelectModels)
+       
+       options = [model1, model2, model3, model4, model5, model6, model7, model8, model9]
+       st.session_state.options = options
+       selected = 0
+       for option in options:
+           selected += st.session_state[option]
+       
+       st.write("Click the button below to complete the selection of models.")
+       if st.button(label = "Complete selection", key = "modelSelection", on_click = setStage, args = [13]):
+       
+          if selected == 0:
+               
+             st.markdown(":red[Please select at least one model to train.]")
+             setStage(12)
+             
+          else: 
+             disabledSelectModels = True
+             
+          st.rerun()
+          
+   selectModels()
    
 #--------------------------------------------------------------------
 # Click to set the values of the parameters of the selected model(s).
@@ -774,6 +828,7 @@ if st.session_state.stage >= 12:
 if st.session_state.stage >= 13:
     
     trueOptions = []
+    options = st.session_state.options
     for option in options:
         
         if st.session_state[option] is True:
@@ -979,13 +1034,18 @@ if st.session_state.stage >= 16:
          if toDisplay:
              
             if nUniqueValues > 2:
+                
+               vType = st.session_state.vType
                                
                if vType == type1:
                      
                   y = testSet[[targetVariable]] 
+                  binarizer = st.session_state.binarizer
                   testSet["binarized " + targetVariable] = binarizer.transform(y).astype(int)
                    
                else:
+                   
+                  positiveClasses = st.session_state.positiveClasses
                   testSet["binarized " + targetVariable] = testSet[targetVariable].apply(lambda x: 1 if x in positiveClasses else 0)
                    
                displayDataset(dataset = testSet, header = header)
@@ -1279,8 +1339,8 @@ if toRetrain:
       retrainedModel[filename] = model
       st.session_state.retraindedModel = retrainedModel
          
-      messagePart = "Click the `Start Over` or `Reset` buttons to go back to the intro page or close the \
-                     browser's tab displaying this web app to exit."
+      messagePart = "Click the `Reset` button to go back to the intro page or close the browser's tab \
+                     displaying this web app to exit."
          
    else:
       
@@ -1315,9 +1375,8 @@ if toRetrain:
          retrainedModel[filename] = model
          st.session_state.retraindedModel = retrainedModel
          
-         messagePart = "You may select another model to retrain and save. You may also click the `Start Over` or \
-                        `Reset` buttons to go back to the intro page or close the browser's tab displaying this \
-                        web app to exit."
+         messagePart = "You may select another model to retrain and save. You may also click the `Reset` button \
+                        to go back to the intro page or close the browser's tab displaying this web app to exit."
          
       else:
          setStage(18)
@@ -1338,18 +1397,15 @@ if st.session_state.stage >= 19:
            
    pickleObject = pickle.dumps(model)
    
-   if st.download_button(label = "Save the retrained model", 
-                      data = pickleObject, 
-                      file_name = filename + ".pkl",
-                      mime = "application/octet-stream",
-                      on_click = setStage, 
-                      args = [20]):
-
-      st.write("Model saved as a pickle file in the Downloads folder. " + messagePart)
-             
-#-----------
-# Start over
-#-----------
-
-if st.session_state.stage >= 20:
-   st.sidebar.button(label = 'Start Over', on_click = setStage, args = [0])
+   @st.experimental_fragment
+   def saveModel():
+       
+       if st.download_button(label = "Save the retrained model", 
+                             data = pickleObject, 
+                             file_name = filename + ".pkl",
+                             mime = "application/octet-stream"):
+          
+          st.write("Model saved as a pickle file in the Downloads folder. " + messagePart) 
+          
+   saveModel()
+        

@@ -1,7 +1,7 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: May 8, 2024
+Date Modified: May 13, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -151,8 +151,9 @@ def binarizeTarget(dataset, classes, targetVariable, variableType, currentStage,
              st.write("Click the button below to complete the selection of the classes that will be \
                        map to 1.")         
                
-             st.button(label = "Complete selection", key = "positiveClassesSelection", on_click = setStage, 
-                       args = [nextStage])
+             if st.button(label = "Complete selection", key = "positiveClassesSelection", on_click = setStage, 
+                          args = [nextStage]):
+                st.rerun()
         
              dataset["binarized " + targetVariable] = dataset[targetVariable].apply(lambda x: 1 if x in positiveClasses else 0)
 
@@ -188,10 +189,10 @@ def binarizeTarget(dataset, classes, targetVariable, variableType, currentStage,
             st.write("Click the button below to complete the mapping of values to 1 and 0 according to the selected \
                       threshold.")         
            
-            st.button(label = "Complete mapping", key = "positiveClassesMapping", on_click = setStage, 
-                      args = [nextStage])
+            if st.button(label = "Complete mapping", key = "positiveClassesMapping", on_click = setStage, 
+                         args = [nextStage]):
+               st.rerun()
          
-        
          y = dataset[[targetVariable]]
          binarizer = Binarizer(threshold = threshold)
          binarizer.fit(y)
@@ -203,8 +204,13 @@ def changeTargetVariable():
     '''Delete the confirmTargetVariable key.'''
     
     setStage(4)
-    del st.session_state["confirmTargetVariable"]
-    del st.session_state["toCategorical"]
+    
+    if "confirmTargetVariable" in st.session_state: 
+       del st.session_state["confirmTargetVariable"]
+    
+    if "toCategorical" in st.session_state:
+       del st.session_state["toCategorical"]
+
     
 def checkUploadedTestSet(testSet, features, targetVariable, nFeaturesToUse, nFeatures):
     '''Check the columns of the uploaded test set.'''
