@@ -1,7 +1,7 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: June 18, 2024
+Date Modified: June 19, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn.
@@ -714,10 +714,17 @@ if st.session_state.stage >= 11:
        
       colTransformer.fit(trainSet[features])
       
-      xTrain = colTransformer.transform(trainSet[features])
-      
-      if scipy.sparse.issparse(xTrain):
-         xTrain = xTrain.toarray()
+      @st.cache_data
+      def transformFeatures(dataset):
+
+          xDataset = colTransformer.transform(dataset)
+          
+          if scipy.sparse.issparse(xDataset):
+             xDataset = xDataset.toarray()
+             
+          return xDataset
+  
+      xTrain = transformFeatures(dataset = trainSet[features])
           
       if nUniqueValues > 2:
          yTrain = trainSet[["binarized " + targetVariable]]
@@ -1060,11 +1067,8 @@ if st.session_state.stage >= 17:
    if featureTransformation == ftOption1:
        
       try:
-           
-         xTest = colTransformer.transform(testSet[features])  
-         
-         if scipy.sparse.issparse(xTest):
-            xTest = xTest.toarray()
+                       
+         xTest = transformFeatures(dataset = testSet[features])
          
          if datasetAvailability == case2:
             

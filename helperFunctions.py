@@ -1,7 +1,7 @@
 """
          File: helperFunctions.py
  Date Created: March 4, 2024
-Date Modified: May 13, 2024
+Date Modified: June 19, 2024
 ------------------------------------------------------------------------------------------------------
 The functions defined in this script are imported by modelParams.py and scikit-learnClassification.py.
 ------------------------------------------------------------------------------------------------------
@@ -284,15 +284,11 @@ def confirmTargetVariable(targetVariable = None):
     st.session_state.toTargetVariable = True
     
     if "confirmTargetVariable" not in st.session_state:
-       st.session_state.confirmTargetVariable = False  
-    
-    st.session_state.confirmTargetVariable = True
-    
-    if "toCategorical" not in st.session_state:
-       st.session_state.toCategorical = False
+       st.session_state.confirmTargetVariable = True  
         
-    st.session_state.toCategorical = True
-
+    if "toCategorical" not in st.session_state:
+       st.session_state.toCategorical = True
+        
 def displayClassDistribution(datasetHolder, targetVariable, nUniqueValues, titlePart = " "):
     '''Display the class distribution of the target variable in the training set.'''
     
