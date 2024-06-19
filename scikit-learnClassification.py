@@ -1,7 +1,7 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: June 19, 2024
+Date Modified: June 20, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn.
@@ -26,6 +26,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
+import gc
 import matplotlib.pyplot as plt
 import modelParams
 import numpy as np
@@ -567,6 +568,8 @@ if st.session_state.stage >= 8:
                  header = "**Training Set with Selected Features**"
                
          displayDataset(dataset = datasetToDisplay, header = header, displayInstancesCount = False)
+         del datasetToDisplay
+         gc.collect()
           
       else:
          st.write("All features in the dataset are selected to be used in model training and testing.") 
@@ -617,6 +620,8 @@ if st.session_state.stage >= 9 or toSplit:
          y = dataset[[targetVariable]]
          
       xTrain, xTest, yTrain, yTest = train_test_split(X, y, train_size = trainingSetSize)
+      del X, y
+      gc.collect()
       
       st.write(" ")
       st.write("Click the button below to confirm the selected train-test split ratio and \
@@ -748,6 +753,9 @@ if st.session_state.stage >= 11:
          transformedTrainSet = pd.concat([xTrainDf, trainSet[targetVariable], yTrain], axis = 1)
       elif nUniqueValues == 2:
            transformedTrainSet = pd.concat([xTrainDf, yTrain], axis = 1)
+           
+      del xTrainDf
+      gc.collect()
       
       if type(balancingOutput) == tuple:
          header = "**Balanced Training Set with Transformed Features**"
@@ -755,6 +763,8 @@ if st.session_state.stage >= 11:
            header = "**Training Set with Transformed Features**"
       
       displayDataset(dataset = transformedTrainSet, header = header, displayInstancesCount = False)
+      del transformedTrainSet
+      gc.collect()
        
    else:
       xTrain = trainSet[features].to_numpy()
@@ -776,6 +786,9 @@ if st.session_state.stage >= 12:
       yTrain = trainSet["binarized " + targetVariable].to_numpy()
    else:
       yTrain = trainSet[targetVariable].to_numpy()
+      
+   del trainSet
+   gc.collect()
    
    model1 = "Decision Tree Classifier"
    model2 = "Gaussian Naive Bayes Classifier"
@@ -975,6 +988,8 @@ if st.session_state.stage >= 15:
           try:
               
               model.fit(xTrain, yTrain)
+              del xTrain, yTrain
+              gc.collect()
               trainingSucceeded.append(option)
               st.session_state.models[option] = model
               
@@ -1083,9 +1098,14 @@ if st.session_state.stage >= 17:
             transformedTestSet = pd.concat([xTestDf, testSet[targetVariable], yTest], axis = 1)
          elif nUniqueValues == 2:
               transformedTestSet = pd.concat([xTestDf, yTest], axis = 1)
+              
+         del xTestDf
+         gc.collect()
          
          displayDataset(dataset = transformedTestSet, header = "**Test Set with Transformed Features**",
                         displayInstancesCount = False)
+         del transformedTestSet
+         gc.collect()
          
          toROC = True
        
@@ -1271,7 +1291,10 @@ if toRetrain:
    if datasetAvailability in [case1, case3]:
       fullDataset = dataset
    else:
+       
       fullDataset = pd.concat([datasetHolder, testSet], ignore_index = True)
+      del testSet
+      gc.collect()
             
    if type(balancingOutput) == tuple:
        
@@ -1285,6 +1308,8 @@ if toRetrain:
                                                                              fullDataset[[targetVariable]])
          
       datasetRetrain = pd.concat([xDatasetResampled, yDatasetResampled], axis = 1)
+      del xDatasetResampled, yDatasetResampled
+      gc.collect()
       messagePart1 = " the dataset obtained by balancing out the class distribution of "
       
    else:
@@ -1304,6 +1329,9 @@ if toRetrain:
       y = datasetRetrain["binarized " + targetVariable].to_numpy()
    else:
       y = datasetRetrain[targetVariable].to_numpy()
+      
+   del datasetRetrain
+   gc.collect()
       
    retrainedModel = {}
    
