@@ -1,7 +1,7 @@
 """
          File: scikit-learnClassification.py
  Date Created: February 6, 2024
-Date Modified: June 20, 2024
+Date Modified: June 21, 2024
 ----------------------------------------------------------------------------------------------
 Walk the user through the steps in training and testing one or more binary classifiers using a 
 selection of algorithms that are implemented in scikit-learn.
@@ -988,13 +988,14 @@ if st.session_state.stage >= 15:
           try:
               
               model.fit(xTrain, yTrain)
-              del xTrain, yTrain
-              gc.collect()
               trainingSucceeded.append(option)
               st.session_state.models[option] = model
               
           except:
               trainingFailed.append(option)
+              
+      del xTrain, yTrain
+      gc.collect()
       
       st.session_state.trainingSucceeded = trainingSucceeded
       st.session_state.trainingFailed = trainingFailed
